@@ -21,42 +21,46 @@ class FoodDiary extends StatelessWidget {
               context: context,
               builder: (context) => AlertDialog(
                     title: const Text('Lebensmittel Eintrag'),
-                    content: Column(children: <Widget>[
-                      Container(
-                        child: TextField(
-                          decoration: InputDecoration(hintText: 'Bezeichnung'),
+                    content: Column(
+                      children: <Widget>[
+                        Container(
+                          child: TextField(
+                            decoration:
+                                InputDecoration(hintText: 'Bezeichnung'),
+                          ),
                         ),
-                      ),
-                      Container(
-                        child: TextField(
-                          decoration:
-                              InputDecoration(hintText: 'Menge in Gramm'),
+                        Container(
+                          child: TextField(
+                            decoration:
+                                InputDecoration(hintText: 'Menge in Gramm'),
+                          ),
                         ),
-                      ),
-                      Container(
-                          alignment: Alignment.bottomCenter,
-                          child: TextButton(
-                              onPressed: () => {
-
-                                showDialog(
-                                  context: context,
-                                  builder: (context) => AlertDialog(
-                                        title: Text('Success'),
-                                        content: IconButton(
-                                          onPressed: () {
-                                            Navigator.pushAndRemoveUntil(
-                                                context,
-                                                MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        FoodDiary()),
-                                                (route) => false);
-                                          },
-                                          icon: Icon(FontAwesomeIcons.check,
-                                              color: Colors.green),
-                                        ),
-                                      ))},
-                              child: Text('Submit')))
-                    ],),
+                        Container(
+                            alignment: Alignment.bottomCenter,
+                            child: TextButton(
+                                onPressed: () => {
+                                      showDialog(
+                                          context: context,
+                                          builder: (context) => AlertDialog(
+                                                title: Text('Success'),
+                                                content: IconButton(
+                                                  onPressed: () {
+                                                    Navigator.pushAndRemoveUntil(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                            builder: (context) =>
+                                                                FoodDiary()),
+                                                        (route) => false);
+                                                  },
+                                                  icon: Icon(
+                                                      FontAwesomeIcons.check,
+                                                      color: Colors.green),
+                                                ),
+                                              ))
+                                    },
+                                child: Text('Submit')))
+                      ],
+                    ),
                   )),
           tooltip: 'Increment',
           child: const Icon(Icons.add),
