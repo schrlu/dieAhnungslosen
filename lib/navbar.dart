@@ -8,10 +8,14 @@ class NavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Drawer(
+      backgroundColor: Color.fromARGB(255, 1, 5, 6),
+
         child: ListView(
       children: [
+        Image.asset('images/navbar/food.jpg'),
         ListTile(
-          leading: Icon(FontAwesomeIcons.receipt),
+          textColor: Colors.white,
+          leading: Icon(FontAwesomeIcons.receipt, color: Colors.white),
           title: Text('Ernährungstagebuch'),
           onTap: () {
             Navigator.push(
@@ -23,7 +27,8 @@ class NavBar extends StatelessWidget {
           },
         ),
         ListTile(
-          leading: Icon(FontAwesomeIcons.carrot),
+          textColor: Colors.white,
+          leading: Icon(FontAwesomeIcons.carrot, color: Colors.white),
           title: Text('Kühlschrank'),
           onTap: () {
             Navigator.push(
@@ -35,7 +40,8 @@ class NavBar extends StatelessWidget {
           },
         ),
         ListTile(
-          leading: Icon(FontAwesomeIcons.slidersH),
+          textColor: Colors.white,
+          leading: Icon(FontAwesomeIcons.slidersH, color: Colors.white,),
           title: Text('Einstellungen'),
           onTap: () {
             Navigator.push(
