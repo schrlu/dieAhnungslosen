@@ -30,6 +30,7 @@ dependencies:
   flutter:
     sdk: flutter
   font_awesome_flutter: ^8.8.1
+  flutter_barcode_scanner: ^2.0.0
 
 
   # The following adds the Cupertino Icons font to your application.

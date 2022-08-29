@@ -1,13 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:dieahnungslosen/navbar.dart';
+import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:dieahnungslosen/qrscan.dart';
+void main() => runApp(MaterialApp(home: FoodDiary()));
 
-void main() => runApp(const MaterialApp(home: const FoodDiary()));
-
-class FoodDiary extends StatelessWidget {
-  const FoodDiary({Key? key}) : super(key: key);
-
+class FoodDiary extends StatelessWidget{
+  FoodDiary({Key? key}) : super(key: key);
+  QrCodeState _qr = new QrCodeState();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,41 +23,28 @@ class FoodDiary extends StatelessWidget {
               builder: (context) => AlertDialog(
                     title: const Text('Lebensmittel Eintrag'),
                     content: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: <Widget>[
-                        Container(
-                          child: TextField(
-                            decoration:
-                                InputDecoration(hintText: 'Bezeichnung'),
-                          ),
+                        eingabefeld('Bezeichnung', 'Name'),
+                        eingabefeld('Menge in Gramm', 'Menge'),
+                        eingabefeld('bla bla', 'bla bla'),
+                        Column(
+                          children: [
+                            Text('Barcode-Scan'),
+                            IconButton(
+                                onPressed: () => _qr.scan(),
+                                icon: Icon(FontAwesomeIcons.barcode)),
+                          ],
                         ),
-                        Container(
-                          child: TextField(
-                            decoration:
-                                InputDecoration(hintText: 'Menge in Gramm'),
-                          ),
-                        ),
+                        Text(_qr.barcode),
                         Container(
                             alignment: Alignment.bottomCenter,
                             child: TextButton(
                                 onPressed: () => {
                                       showDialog(
                                           context: context,
-                                          builder: (context) => AlertDialog(
-                                                title: Text('Success'),
-                                                content: IconButton(
-                                                  onPressed: () {
-                                                    Navigator.pushAndRemoveUntil(
-                                                        context,
-                                                        MaterialPageRoute(
-                                                            builder: (context) =>
-                                                                FoodDiary()),
-                                                        (route) => false);
-                                                  },
-                                                  icon: Icon(
-                                                      FontAwesomeIcons.check,
-                                                      color: Colors.green),
-                                                ),
-                                              ))
+                                          builder: (context) =>
+                                              successWindow(FoodDiary()))
                                     },
                                 child: Text('Submit')))
                       ],
@@ -67,46 +55,48 @@ class FoodDiary extends StatelessWidget {
         ));
   }
 }
-// constraints: BoxConstraints(
-// child: Container(
-// borderRadius: BorderRadius.circular(20.0)),
-// shape: RoundedRectangleBorder(
-// return Dialog(
-// builder: (BuildContext context) {
-// context: context,
-// showDialog(
-// maxHeight: MediaQuery.of(context).size.height),
-// child: Padding(
-// padding: const EdgeInsets.all(12.0),
-// child: Column(
-// children: <Widget>[
-// Row(
-// children: [
-// Container(
-// child: const Text(
-// 'Lebensmittel Eintrag',
-// style: TextStyle(
-// fontWeight: FontWeight.bold,
-// fontSize: 18,
-// color: Colors.black,
-// wordSpacing: 1,
-// ),
-// ),
-// ),
-// ],
-// ),
-// Row(
-// children: [
-// Container(
-// child: Text(
-// 'Test',
-// ),
-// ),
-// ],
-// ),
-// ],
-// ),
-// ),
-// ),
-// );
-// }),
+
+class eingabefeld extends StatelessWidget {
+  String title;
+  String decoration;
+
+  eingabefeld(this.title, this.decoration);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, textAlign: TextAlign.left),
+        TextField(decoration: InputDecoration(hintText: decoration)),
+      ],
+      // mainAxisAlignment: MainAxisAlignment.spaceAround,
+    );
+  }
+}
+
+
+
+class successWindow extends StatelessWidget {
+  Widget page;
+
+  successWindow(this.page);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      child: AlertDialog(
+        title: Text('Success'),
+        content: IconButton(
+          onPressed: () {
+            Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => page),
+                (route) => false);
+          },
+          icon: Icon(FontAwesomeIcons.check, color: Colors.green),
+        ),
+      ),
+    );
+  }
+}

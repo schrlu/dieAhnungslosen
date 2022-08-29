@@ -8,51 +8,41 @@ class NavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Drawer(
-      backgroundColor: Color.fromARGB(255, 1, 5, 6),
-
+        backgroundColor: Color.fromARGB(255, 1, 5, 6),
         child: ListView(
-      children: [
-        Image.asset('images/navbar/food.jpg'),
-        ListTile(
-          textColor: Colors.white,
-          leading: Icon(FontAwesomeIcons.receipt, color: Colors.white),
-          title: Text('Ernährungstagebuch'),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => FoodDiary(),
-              ),
-            );
-          },
-        ),
-        ListTile(
-          textColor: Colors.white,
-          leading: Icon(FontAwesomeIcons.carrot, color: Colors.white),
-          title: Text('Kühlschrank'),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => WhatsInMyFridge(),
-              ),
-            );
-          },
-        ),
-        ListTile(
-          textColor: Colors.white,
-          leading: Icon(FontAwesomeIcons.slidersH, color: Colors.white,),
-          title: Text('Einstellungen'),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => Settings(),
-              ),
-            );
-          },
-        ),
-      ],
-    ));
+          children: [
+            Image.asset('images/navbar/food.jpg'),
+            site('Ernährungstagebuch', FontAwesomeIcons.receipt, FoodDiary()),
+            site('Kühlschrank', FontAwesomeIcons.carrot, WhatsInMyFridge()),
+            site('Einstellungen', FontAwesomeIcons.slidersH, Settings()),
+          ],
+        ));
   }
 }
+
+class site extends StatelessWidget {
+  IconData icon;
+  Widget page;
+  String title;
+  site(this.title, this.icon, this.page);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+        child: ListTile(
+          textColor: Colors.white,
+          leading: Icon(icon, color: Colors.white),
+          title: Text(title),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => page,
+              ),
+            );
+          },
+        ),
+    );
+  }
+}
+

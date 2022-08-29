@@ -7,6 +7,7 @@ class Settings extends StatelessWidget {
     return Scaffold(
       drawer: NavBar(),
       appBar: AppBar(
+        backgroundColor: Color.fromARGB(255, 1, 5, 6),
         title: Text('Einstellungen'),
       ),
     );
