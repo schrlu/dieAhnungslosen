@@ -1,7 +1,19 @@
+import 'dart:convert';
+import 'dart:developer';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:dieahnungslosen/navbar.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
+import 'package:openfoodfacts/model/Product.dart';
+import 'package:openfoodfacts/model/ProductList.dart';
+import 'package:openfoodfacts/model/UserAgent.dart';
+import 'package:openfoodfacts/utils/PnnsGroups.dart';
+import 'package:openfoodfacts/utils/ProductQueryConfigurations.dart';
+import 'dart:async';
+import 'package:openfoodfacts/model/OcrIngredientsResult.dart';
+import 'package:openfoodfacts/openfoodfacts.dart';
+import 'package:openfoodfacts/utils/TagType.dart';
 
 void main() => runApp(MaterialApp(home: FoodDiary()));
 
@@ -13,12 +25,29 @@ class FoodDiary extends StatefulWidget {
 }
 
 class FoodDiaryState extends State<FoodDiary> {
+  Future<String?> getProduct(String barcode) async {
+    // var barcode = '0048151623426';
+
+    ProductQueryConfiguration configuration = ProductQueryConfiguration(barcode,
+        language: OpenFoodFactsLanguage.GERMAN, fields: [ProductField.ALL]);
+    ProductResult result = await OpenFoodAPIClient.getProduct(configuration);
+
+    if (result.status == 1) {
+      // return result.product;
+      return jsonEncode(result.product);
+    } else {
+      throw Exception('product not found, please insert data for $barcode');
+    }
+  }
+
   String _barcode = "";
+
   scan() async {
     return await FlutterBarcodeScanner.scanBarcode(
-        "#000000", 'Abbrechen', true, ScanMode.BARCODE).then((value) =>
-        setState(() => _barcode = value));
+            "#000000", 'Abbrechen', true, ScanMode.BARCODE)
+        .then((value) => setState(() => _barcode = value));
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -32,21 +61,26 @@ class FoodDiaryState extends State<FoodDiary> {
               shrinkWrap: true,
               padding: EdgeInsets.all(20),
               children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        Text("Test"),
-                        Text("Hallo"),
-                        Text("Tralala")
-                      ],
-                    )
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [Text("Hallo"), Text("Tralala")],
+                ),
+                FutureBuilder<String?>(
+                    future: getProduct(_barcode),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        String data = snapshot.data!;
+                        String productName = jsonDecode(data)['product_name'];
+                        return Text(productName);
+                      } else{
+                        return Text('waiting');
+                      }
+                    })
               ],
-
             ),
           ],
         ),
-        floatingActionButton:
-        Column(
+        floatingActionButton: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             FloatingActionButton(
@@ -62,11 +96,11 @@ class FoodDiaryState extends State<FoodDiary> {
                             eingabefeld('bla bla', 'bla bla'),
                             TextButton(
                                 onPressed: () => {
-                                  showDialog(
-                                      context: context,
-                                      builder: (context) =>
-                                          successWindow(FoodDiary()))
-                                },
+                                      showDialog(
+                                          context: context,
+                                          builder: (context) =>
+                                              successWindow(FoodDiary()))
+                                    },
                                 child: Text('Submit')),
                           ],
                         ),
@@ -75,12 +109,9 @@ class FoodDiaryState extends State<FoodDiary> {
               child: const Icon(Icons.add),
             ),
             Padding(
-              padding: EdgeInsets.only(top: 15),
-              child: FloatingActionButton
-                (
-                onPressed: () => scan(),
-              child: Icon(Icons.camera_alt),),
-            )
+                padding: EdgeInsets.only(top: 15),
+                child: FloatingActionButton(
+                    onPressed: () => scan(), child: Icon(Icons.camera_alt))),
           ],
         ));
   }
