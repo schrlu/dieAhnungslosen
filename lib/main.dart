@@ -34,6 +34,7 @@ class FoodDiaryState extends State<FoodDiary> {
 
     if (result.status == 1) {
       // return result.product;
+      print(jsonEncode(result.product));
       return jsonEncode(result.product);
     } else {
       throw Exception('product not found, please insert data for $barcode');
@@ -61,17 +62,29 @@ class FoodDiaryState extends State<FoodDiary> {
               shrinkWrap: true,
               padding: EdgeInsets.all(20),
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [Text("Hallo"), Text("Tralala")],
-                ),
                 FutureBuilder<String?>(
                     future: getProduct(_barcode),
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
                         String data = snapshot.data!;
-                        String productName = jsonDecode(data)['product_name'];
-                        return Text(productName);
+                        String productJson = jsonDecode(data)['product_name'];
+                        OwnProduct product = new OwnProduct(name: jsonDecode(data)['product_name'], 
+                            marke: jsonDecode(data)['brands'],
+                            menge: jsonDecode(data)['quantity'], 
+                            bildurl: jsonDecode(data)['image_front_url']);
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            product.name != null?
+                            Text('Produktbezeichnung: ${product.name}') : Text('Kein Name gefunden'),
+                            product.marke != null?
+                            Text('Marke: ${product.marke}') : Text('Keine Marke gefunden'),
+                            product.menge != null?
+                            Text('Menge: ${product.menge}') : Text('Keine Menge gefunden'),
+                            product.bildurl != null?
+                            Image.network(product.bildurl) : Text('Kein Bild gefunden')
+                          ],
+                        );
                       } else{
                         return Text('waiting');
                       }
@@ -159,4 +172,13 @@ class successWindow extends StatelessWidget {
       ),
     );
   }
+}
+
+class OwnProduct{
+  String name;
+  String marke;
+  String menge;
+  String bildurl;
+
+  OwnProduct({required this.name, required this.marke, required this.menge, required this.bildurl });
 }
