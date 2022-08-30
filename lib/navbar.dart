@@ -1,6 +1,5 @@
 import 'package:dieahnungslosen/main.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:dieahnungslosen/fridge.dart';
 import 'package:dieahnungslosen/settings.dart';
 
@@ -12,9 +11,9 @@ class NavBar extends StatelessWidget {
         child: ListView(
           children: [
             Image.asset('images/navbar/food.jpg'),
-            site('Ernährungstagebuch', FontAwesomeIcons.receipt, FoodDiary()),
-            site('Kühlschrank', FontAwesomeIcons.carrot, WhatsInMyFridge()),
-            site('Einstellungen', FontAwesomeIcons.slidersH, Settings()),
+            site('Ernährungstagebuch', Icons.receipt, FoodDiary()),
+            site('Kühlschrank', Icons.door_front_door_rounded, WhatsInMyFridge()),
+            site('Einstellungen', Icons.settings, Settings()),
           ],
         ));
   }
