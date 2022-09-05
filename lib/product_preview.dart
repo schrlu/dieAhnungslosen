@@ -13,16 +13,17 @@ import 'own_product.dart';
 
 class ProductPreview extends StatelessWidget {
   final String _barcode;
-  ProductPreview(this._barcode);
-  OwnProduct? prod;
 
+  ProductPreview(this._barcode);
+
+  OwnProduct? prod;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       drawer: NavBar(),
       appBar: AppBar(
-        title: Text('Kühlschrank'),
+        title: Text('Produkt Vorschau'),
       ),
       body: Column(
         children: [
@@ -30,54 +31,47 @@ class ProductPreview extends StatelessWidget {
             child: FutureBuilder<OwnProduct?>(
                 future: getProduct(_barcode),
                 builder: (context, snapshot) {
-                  if (snapshot.hasData){
+                  if (snapshot.hasData) {
                     prod = snapshot.data!;
+
                     return Column(
                       children: [
                         Text('Produktname: ${prod?.name}'),
                         Text('Produktmarke ${prod?.marke}')
                       ],
                     );
-                  }
-                  else{
+                  } else {
                     return Text('Keine Daten gefunden');
                   }
-                }
-            ),
-            ),
+                }),
+          ),
           Center(
             child: IconButton(
               onPressed: () async {
-                if (prod != null){
-                  DatabaseHelper.instance.addProduct(prod!);
-                }
                 Navigator.pushAndRemoveUntil(
                     context,
                     MaterialPageRoute(builder: (context) => FoodDiary()),
-                        (route) => false);
+                    (route) => false);
               },
               icon: Icon(Icons.check, color: Colors.green),
             ),
           )
         ],
       ),
-      );
+    );
   }
 
   Future<OwnProduct?> getProduct(String barcode) async {
-
-    ProductQueryConfiguration configuration = ProductQueryConfiguration(
-        barcode,
-        language: OpenFoodFactsLanguage.GERMAN,
-        fields: [ProductField.ALL]);
+    ProductQueryConfiguration configuration = ProductQueryConfiguration(barcode,
+        language: OpenFoodFactsLanguage.GERMAN, fields: [ProductField.ALL]);
     ProductResult result = await OpenFoodAPIClient.getProduct(configuration);
     if (result.status == 1) {
-      // return result.product;
-
+      print(jsonDecode(jsonEncode(result.product)));
       OwnProduct product = OwnProduct(
-          name: jsonEncode(result.product?.productName),
-          marke: jsonEncode(result.product?.brands),
-          menge: jsonEncode(result.product?.quantity),
+          barcode: jsonDecode(jsonEncode(result.product))['code'],
+          name: jsonDecode(jsonEncode(result.product))['product_name'],
+          marke: jsonDecode(jsonEncode(result.product))['brands'],
+          menge: jsonDecode(jsonEncode(result.product))['quantity'],
           kalorien: jsonEncode(result.product?.nutriments?.energyKcal100g),
           fett: jsonEncode(result.product?.nutriments?.fat),
           gesaettigt: jsonEncode(result.product?.nutriments?.saturatedFat),

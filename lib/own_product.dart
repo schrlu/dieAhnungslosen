@@ -2,6 +2,7 @@ import 'package:openfoodfacts/utils/PnnsGroups.dart';
 
 class OwnProduct {
   int? food_id;
+  String? barcode;
   String? name;
   String? marke;
   String? menge;
@@ -15,6 +16,7 @@ class OwnProduct {
 
   OwnProduct(
       {this.food_id,
+        this.barcode,
       required this.name,
       this.marke,
       this.menge,
@@ -29,6 +31,7 @@ class OwnProduct {
   Map<String, dynamic> toMap() {
     return {
       'food_id': food_id,
+      'barcode': barcode,
       'name': name,
       'marke': marke,
       'menge': menge,
@@ -45,6 +48,7 @@ class OwnProduct {
   factory OwnProduct.fromMap(Map<String, dynamic> map) {
     return OwnProduct(
         food_id: map['food_id'],
+        barcode: map['barcode'],
         name: map['name'],
         marke: map['marke'],
         menge: map['menge'],

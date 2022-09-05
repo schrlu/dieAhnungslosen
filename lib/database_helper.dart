@@ -31,6 +31,7 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE food(
       food_id INTEGER PRIMARY KEY AUTOINCREMENT,
+      barcode STRING,
       name STRING,
       marke STRING,
       menge INTEGER,
@@ -127,6 +128,22 @@ class DatabaseHelper {
         whereArgs: whereArguments);
     String marke = result.first['marke'];
     String name = result.first['name'];
+    print('Printausgabe: ${result.first}');
     return '${marke.substring(1, marke.length - 1)} ${name.substring(1, marke.length - 1)}';
   }
+
+Future<bool> checkProduct(OwnProduct product) async {
+    Database db = await instance.database;
+    List<String> columnsToSelect = ['food_id', 'name', 'marke'];
+    String whereString = 'barcode = ?';
+    List<dynamic> whereArguments = [product.barcode];
+    List<Map> result = await db.query('food',
+        columns: columnsToSelect,
+        where: whereString,
+        whereArgs: whereArguments);
+
+
+    return result.isEmpty;
+  }
 }
+
