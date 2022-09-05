@@ -1,6 +1,9 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:dieahnungslosen/database_helper.dart';
+import 'package:dieahnungslosen/diary_entry.dart';
+import 'package:dieahnungslosen/product_preview.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:dieahnungslosen/navbar.dart';
@@ -14,6 +17,8 @@ import 'dart:async';
 import 'package:openfoodfacts/model/OcrIngredientsResult.dart';
 import 'package:openfoodfacts/openfoodfacts.dart';
 import 'package:openfoodfacts/utils/TagType.dart';
+import 'package:dieahnungslosen/own_product.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 
 void main() => runApp(MaterialApp(home: FoodDiary()));
 
@@ -25,29 +30,7 @@ class FoodDiary extends StatefulWidget {
 }
 
 class FoodDiaryState extends State<FoodDiary> {
-  Future<String?> getProduct(String barcode) async {
-    // var barcode = '0048151623426';
-
-    ProductQueryConfiguration configuration = ProductQueryConfiguration(barcode,
-        language: OpenFoodFactsLanguage.GERMAN, fields: [ProductField.ALL]);
-    ProductResult result = await OpenFoodAPIClient.getProduct(configuration);
-
-    if (result.status == 1) {
-      // return result.product;
-      print(jsonEncode(result.product));
-      return jsonEncode(result.product);
-    } else {
-      throw Exception('product not found, please insert data for $barcode');
-    }
-  }
-
   String _barcode = "";
-
-  scan() async {
-    return await FlutterBarcodeScanner.scanBarcode(
-            "#000000", 'Abbrechen', true, ScanMode.BARCODE)
-        .then((value) => setState(() => _barcode = value));
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,47 +39,51 @@ class FoodDiaryState extends State<FoodDiary> {
         appBar: AppBar(
           title: const Text('Ernährungstagebuch'),
         ),
-        body: Column(
-          children: [
-            ListView(
-              shrinkWrap: true,
-              padding: EdgeInsets.all(20),
-              children: [
-                FutureBuilder<String?>(
-                    future: getProduct(_barcode),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasData) {
-                        String data = snapshot.data!;
-                        String productJson = jsonDecode(data)['product_name'];
-                        OwnProduct product = new OwnProduct(name: jsonDecode(data)['product_name'], 
-                            marke: jsonDecode(data)['brands'],
-                            menge: jsonDecode(data)['quantity'], 
-                            bildurl: jsonDecode(data)['image_front_url']);
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            product.name != null?
-                            Text('Produktbezeichnung: ${product.name}') : Text('Kein Name gefunden'),
-                            product.marke != null?
-                            Text('Marke: ${product.marke}') : Text('Keine Marke gefunden'),
-                            product.menge != null?
-                            Text('Menge: ${product.menge}') : Text('Keine Menge gefunden'),
-                            product.bildurl != null?
-                            Image.network(product.bildurl) : Text('Kein Bild gefunden')
+        body: Center(
+          child: FutureBuilder<List<DiaryEntry>>(
+            future: DatabaseHelper.instance.getDiaryEntries(),
+            builder: (BuildContext context, AsyncSnapshot snapshot) {
+              if (!snapshot.hasData) {
+                return Center(
+                  child: Text('Lade Daten'),
+                );
+              }
+              return snapshot.data.isEmpty
+                  ? Center(
+                      child: Text('Keine Produkte gefunden'),
+                    )
+                  : ListView(
+                      children: snapshot.data!.map((entry) async {
+                        return Slidable(
+                          actionPane: SlidableDrawerActionPane(),
+                          secondaryActions: [
+                            IconSlideAction(
+                              caption: 'Bearbeiten',
+                              color: Colors.black,
+                              icon: Icons.edit,
+                              onTap: () {},
+                            ),
+                            IconSlideAction(
+                                caption: 'Löschen',
+                                color: Colors.red,
+                                icon: Icons.delete,
+                                onTap: () {
+                                  DatabaseHelper.instance
+                                      .removeDiaryEntry(entry.id!);
+                                })
                           ],
+                          child: Text(DatabaseHelper.instance.getFullName(entry.id)),
                         );
-                      } else{
-                        return Text('waiting');
-                      }
-                    })
-              ],
-            ),
-          ],
+                      }).toList(),
+                    );
+            },
+          ),
         ),
         floatingActionButton: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             FloatingActionButton(
+              heroTag: 'Manual-Button',
               onPressed: () => showDialog(
                   context: context,
                   builder: (context) => AlertDialog(
@@ -124,9 +111,24 @@ class FoodDiaryState extends State<FoodDiary> {
             Padding(
                 padding: EdgeInsets.only(top: 15),
                 child: FloatingActionButton(
-                    onPressed: () => scan(), child: Icon(Icons.camera_alt))),
+                    heroTag: 'Scan-Button',
+                    onPressed: () async {
+                      await scan();
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ProductPreview(_barcode),
+                          ));
+                    },
+                    child: Icon(Icons.camera_alt))),
           ],
         ));
+  }
+
+  scan() async {
+    return await FlutterBarcodeScanner.scanBarcode(
+            "#000000", 'Abbrechen', true, ScanMode.BARCODE)
+        .then((value) => setState(() => _barcode = value));
   }
 }
 
@@ -174,11 +176,63 @@ class successWindow extends StatelessWidget {
   }
 }
 
-class OwnProduct{
-  String name;
-  String marke;
-  String menge;
-  String bildurl;
-
-  OwnProduct({required this.name, required this.marke, required this.menge, required this.bildurl });
-}
+// Column(
+// children: [
+// ListView(
+// shrinkWrap: true,
+// padding: EdgeInsets.all(20),
+// children: [
+// FutureBuilder<OwnProduct?>(
+// future: getProduct(_barcode),
+// builder: (context, snapshot) {
+// if (snapshot.hasData) {
+// OwnProduct producttest = snapshot.data!;
+// return Column(
+// crossAxisAlignment: CrossAxisAlignment.start,
+// children: [
+// producttest.name != null
+// ? Text(
+// 'Produktbezeichnung: ${producttest.name}')
+//     : Text('Kein Name gefunden'),
+// producttest.marke != null
+// ? Text('Marke: ${producttest.marke}')
+//     : Text('Keine Marke gefunden'),
+// producttest.menge != null
+// ? Text('Menge: ${producttest.menge}')
+//     : Text('Keine Menge gefunden'),
+// Text(''),
+// Text('Nährwerte:'),
+// producttest.kalorien != null
+// ? Text('Energie: ${producttest.kalorien} kcal')
+//     : Text('Keine Kalorien gefunden'),
+// producttest.fett != null
+// ? Text('Fett: ${producttest.fett}g')
+//     : Text('Kein Fett gefunden'),
+// producttest.fett != null
+// ? Text(
+// 'davon gesättigte Fettsäuren: ${producttest.gesaettigt}g')
+//     : Text('Keine gesättigten Fettsäuren gefunden'),
+// producttest.kohlenhydrate != null
+// ? Text(
+// 'Kohlenhydrate: ${producttest.kohlenhydrate}g')
+//     : Text('Keine Kohlenhydrate gefunden'),
+// producttest.davonZucker != null
+// ? Text(
+// 'davon Zucker: ${producttest.davonZucker}g')
+//     : Text('Kein Zucker gefunden'),
+// producttest.eiweiss != null
+// ? Text('Eiweiß: ${producttest.eiweiss}g')
+//     : Text('Kein Eiweiß gefunden'),
+// producttest.salz != null
+// ? Text('Salz: ${producttest.fett}g')
+//     : Text('Kein Salz gefunden'),
+// ],
+// );
+// } else {
+// return Text('waiting');
+// }
+// })
+// ],
+// ),
+// ],
+// )
