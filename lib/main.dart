@@ -8,19 +8,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:dieahnungslosen/navbar.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
-import 'package:openfoodfacts/model/Product.dart';
-import 'package:openfoodfacts/model/ProductList.dart';
-import 'package:openfoodfacts/model/UserAgent.dart';
-import 'package:openfoodfacts/utils/PnnsGroups.dart';
-import 'package:openfoodfacts/utils/ProductQueryConfigurations.dart';
-import 'dart:async';
-import 'package:openfoodfacts/model/OcrIngredientsResult.dart';
-import 'package:openfoodfacts/openfoodfacts.dart';
-import 'package:openfoodfacts/utils/TagType.dart';
-import 'package:dieahnungslosen/own_product.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
-void main() => runApp(MaterialApp(home: FoodDiary()));
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(MaterialApp(home: FoodDiary()));
+}
 
 class FoodDiary extends StatefulWidget {
   const FoodDiary({Key? key}) : super(key: key);
@@ -44,11 +37,9 @@ class FoodDiaryState extends State<FoodDiary> {
             future: DatabaseHelper.instance.getDiaryEntries(),
             builder: (BuildContext context, AsyncSnapshot snapshot) {
               if (!snapshot.hasData) {
-                return Center(
-                  child: Text('Lade Daten'),
-                );
+                return Center(child: Text('Lädt'));
               }
-              return snapshot.data.isEmpty
+              return snapshot.data!.isEmpty
                   ? Center(
                       child: Text('Keine Produkte gefunden'),
                     )
@@ -72,7 +63,8 @@ class FoodDiaryState extends State<FoodDiary> {
                                       .removeDiaryEntry(entry.id!);
                                 })
                           ],
-                          child: Text(DatabaseHelper.instance.getFullName(entry.id)),
+                          child: Text(
+                              DatabaseHelper.instance.getFullName(entry.id)),
                         );
                       }).toList(),
                     );
@@ -175,64 +167,3 @@ class successWindow extends StatelessWidget {
     );
   }
 }
-
-// Column(
-// children: [
-// ListView(
-// shrinkWrap: true,
-// padding: EdgeInsets.all(20),
-// children: [
-// FutureBuilder<OwnProduct?>(
-// future: getProduct(_barcode),
-// builder: (context, snapshot) {
-// if (snapshot.hasData) {
-// OwnProduct producttest = snapshot.data!;
-// return Column(
-// crossAxisAlignment: CrossAxisAlignment.start,
-// children: [
-// producttest.name != null
-// ? Text(
-// 'Produktbezeichnung: ${producttest.name}')
-//     : Text('Kein Name gefunden'),
-// producttest.marke != null
-// ? Text('Marke: ${producttest.marke}')
-//     : Text('Keine Marke gefunden'),
-// producttest.menge != null
-// ? Text('Menge: ${producttest.menge}')
-//     : Text('Keine Menge gefunden'),
-// Text(''),
-// Text('Nährwerte:'),
-// producttest.kalorien != null
-// ? Text('Energie: ${producttest.kalorien} kcal')
-//     : Text('Keine Kalorien gefunden'),
-// producttest.fett != null
-// ? Text('Fett: ${producttest.fett}g')
-//     : Text('Kein Fett gefunden'),
-// producttest.fett != null
-// ? Text(
-// 'davon gesättigte Fettsäuren: ${producttest.gesaettigt}g')
-//     : Text('Keine gesättigten Fettsäuren gefunden'),
-// producttest.kohlenhydrate != null
-// ? Text(
-// 'Kohlenhydrate: ${producttest.kohlenhydrate}g')
-//     : Text('Keine Kohlenhydrate gefunden'),
-// producttest.davonZucker != null
-// ? Text(
-// 'davon Zucker: ${producttest.davonZucker}g')
-//     : Text('Kein Zucker gefunden'),
-// producttest.eiweiss != null
-// ? Text('Eiweiß: ${producttest.eiweiss}g')
-//     : Text('Kein Eiweiß gefunden'),
-// producttest.salz != null
-// ? Text('Salz: ${producttest.fett}g')
-//     : Text('Kein Salz gefunden'),
-// ],
-// );
-// } else {
-// return Text('waiting');
-// }
-// })
-// ],
-// ),
-// ],
-// )

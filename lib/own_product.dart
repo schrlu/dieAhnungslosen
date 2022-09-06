@@ -16,8 +16,8 @@ class OwnProduct {
 
   OwnProduct(
       {this.food_id,
-        this.barcode,
-      required this.name,
+      this.barcode,
+      this.name,
       this.marke,
       this.menge,
       this.kalorien,
@@ -60,5 +60,4 @@ class OwnProduct {
         eiweiss: map['eiweiss'],
         salz: map['salz']);
   }
-
 }

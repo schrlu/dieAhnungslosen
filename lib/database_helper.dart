@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:dieahnungslosen/diary_entry.dart';
 import 'package:dieahnungslosen/main.dart';
+import 'package:flutter/services.dart';
 import 'package:openfoodfacts/model/Product.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -47,7 +48,8 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE food_diary(
       diary_id INTEGER PRIMARY KEY AUTOINCREMENT,
-      weight DECIMAL,
+      weight STRING,
+      date STRING,
       food_id INTEGER,
       FOREIGN KEY (food_id) REFERENCES food (food_id)
       )
@@ -58,25 +60,67 @@ class DatabaseHelper {
       quantity INTEGER,
       food_id INTEGER,
       FOREIGN KEY (food_id) REFERENCES food (food_id)
-    )
-    
+      )
     ''');
   }
 
   Future<List<OwnProduct>> getProducts() async {
     Database db = await instance.database;
     var products = await db.query('food');
+    print('deniz ${products.first['barcode'].runtimeType}');
     List<OwnProduct> productsList = products.isNotEmpty
         ? products.map((e) => OwnProduct.fromMap(e)).toList()
         : [];
     return productsList;
   }
 
+  Future<List> getOneProduct(String barcode) async {
+    Database db = await DatabaseHelper.instance.database;
+    // get single row
+    List<String> columnsToSelect = [
+      'food_id',
+      'barcode',
+      'name',
+      'marke',
+      'menge',
+      'kalorien',
+      'fett',
+      'gesaettigt',
+      'kohlenhydrate',
+      'davonZucker',
+      'eiweiss',
+      'salz'
+    ];
+    String whereString = 'barcode = ?';
+    List<dynamic> whereArguments = [barcode];
+    List<Map> result = await db.query('food',
+        columns: columnsToSelect,
+        where: whereString,
+        whereArgs: whereArguments);
+    return result;
+  }
+
+  Future<bool> checkProduct(String barcode) async {
+    // get a reference to the database
+
+    Database db = await DatabaseHelper.instance.database;
+    // get single row
+    List<String> columnsToSelect = ['barcode'];
+    String whereString = 'barcode = ?';
+    List<dynamic> whereArguments = [barcode];
+    List<Map> result = await db.query('food',
+        columns: columnsToSelect,
+        where: whereString,
+        whereArgs: whereArguments);
+
+    return result.isNotEmpty;
+  }
+
   Future<List<DiaryEntry>> getDiaryEntries() async {
     Database db = await instance.database;
     var entries = await db.query('food_diary');
     List<DiaryEntry> entryList = entries.isNotEmpty
-        ? entries.map((e) => DiaryEntry.fromMap(e)).toList()
+        ? entries.map((c) => DiaryEntry.fromMap(c)).toList()
         : [];
     return entryList;
   }
@@ -111,7 +155,7 @@ class DatabaseHelper {
   Future<int> updateDiaryEntry(DiaryEntry entry) async {
     Database db = await instance.database;
     return await db.update('diary_entry', entry.toMap(),
-        where: 'diary_id = ?', whereArgs: [entry.id]);
+        where: 'diary_id = ?', whereArgs: [entry.diary_id]);
   }
 
   getFullName(int id) async {
@@ -128,22 +172,6 @@ class DatabaseHelper {
         whereArgs: whereArguments);
     String marke = result.first['marke'];
     String name = result.first['name'];
-    print('Printausgabe: ${result.first}');
     return '${marke.substring(1, marke.length - 1)} ${name.substring(1, marke.length - 1)}';
   }
-
-Future<bool> checkProduct(OwnProduct product) async {
-    Database db = await instance.database;
-    List<String> columnsToSelect = ['food_id', 'name', 'marke'];
-    String whereString = 'barcode = ?';
-    List<dynamic> whereArguments = [product.barcode];
-    List<Map> result = await db.query('food',
-        columns: columnsToSelect,
-        where: whereString,
-        whereArgs: whereArguments);
-
-
-    return result.isEmpty;
-  }
 }
-
