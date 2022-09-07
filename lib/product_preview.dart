@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ffi';
 import 'package:dieahnungslosen/database_helper.dart';
 import 'package:dieahnungslosen/diary_entry.dart';
 import 'package:dieahnungslosen/main.dart';
@@ -57,10 +58,11 @@ class ProductPreview extends StatelessWidget {
                 var now = new DateTime.now();
                 var formatter = new DateFormat('dd-MM-yyyy');
                 String formattedDate = formatter.format(now);
-                DiaryEntry entry = DiaryEntry(
-                    date: formattedDate,
-                    food_id: foodId,
-                    weight: mengeController.text);
+                  DiaryEntry entry = DiaryEntry(
+                  weight: double.parse(mengeController.text),
+                  date: formattedDate,
+                  food_id: foodId,
+                );
                 DatabaseHelper.instance.addDiaryEntry(entry);
                 Navigator.pushAndRemoveUntil(
                     context,
@@ -87,6 +89,7 @@ class ProductPreview extends StatelessWidget {
   TextFormField buildTextFormField(
       String decoration, TextEditingController controller) {
     return TextFormField(
+      keyboardType: TextInputType.number,
       controller: controller,
       decoration: (InputDecoration(
           contentPadding: EdgeInsets.symmetric(horizontal: 20),
@@ -121,7 +124,6 @@ class ProductPreview extends StatelessWidget {
           salz: jsonDecode(jsonEncode(result.product))['salt_100g']);
       DatabaseHelper.instance.addProduct(productApi);
       return productApi;
-
     } else {
       throw Exception('product not found, please insert data for $barcode');
     }

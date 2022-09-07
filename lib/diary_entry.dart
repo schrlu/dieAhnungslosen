@@ -1,10 +1,13 @@
-class DiaryEntry {
-  int? diary_id;
-  String? weight;
-  String? date;
-  int? food_id;
+import 'dart:ffi';
 
-  DiaryEntry({this.diary_id,
+class DiaryEntry {
+  final int? diary_id;
+  final double weight;
+  final String date;
+  final int food_id;
+
+  DiaryEntry({
+    this.diary_id,
     required this.weight,
     required this.date,
     required this.food_id,
@@ -19,13 +22,13 @@ class DiaryEntry {
     };
   }
 
-
   factory DiaryEntry.fromMap(Map<String, dynamic> map) {
-    return DiaryEntry(
-      diary_id: map['diary_id'],
-      weight: map['weight'],
-      date: map['date'],
-      food_id: map['food_id'],
+    DiaryEntry diaryEntry = DiaryEntry(
+    diary_id:  map['diary_id'] as int,
+    weight:  map['weight'].toDouble(),
+    date:  map['date'] as String,
+    food_id:  map['food_id'] as int,
     );
+    return diaryEntry;
   }
 }

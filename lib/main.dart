@@ -40,11 +40,13 @@ class FoodDiaryState extends State<FoodDiary> {
                 return Center(child: Text('Lädt'));
               }
               return snapshot.data!.isEmpty
-                  ? Center(
-                      child: Text('Keine Produkte gefunden'),
+                  ?
+              Center(
+                      child:
+                      Text('Keine Produkte gefunden'),
                     )
                   : ListView(
-                      children: snapshot.data!.map((entry) async {
+                      children: snapshot.data!.map<Widget>((entry) async {
                         return Slidable(
                           actionPane: SlidableDrawerActionPane(),
                           secondaryActions: [
@@ -60,11 +62,10 @@ class FoodDiaryState extends State<FoodDiary> {
                                 icon: Icons.delete,
                                 onTap: () {
                                   DatabaseHelper.instance
-                                      .removeDiaryEntry(entry.id!);
+                                      .removeDiaryEntry(entry.diary_id!);
                                 })
                           ],
-                          child: Text(
-                              DatabaseHelper.instance.getFullName(entry.id)),
+                          child: Text('test'),
                         );
                       }).toList(),
                     );

@@ -48,7 +48,7 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE food_diary(
       diary_id INTEGER PRIMARY KEY AUTOINCREMENT,
-      weight STRING,
+      weight DECIMAL,
       date STRING,
       food_id INTEGER,
       FOREIGN KEY (food_id) REFERENCES food (food_id)
@@ -67,7 +67,6 @@ class DatabaseHelper {
   Future<List<OwnProduct>> getProducts() async {
     Database db = await instance.database;
     var products = await db.query('food');
-    print('deniz ${products.first['barcode'].runtimeType}');
     List<OwnProduct> productsList = products.isNotEmpty
         ? products.map((e) => OwnProduct.fromMap(e)).toList()
         : [];
@@ -119,6 +118,8 @@ class DatabaseHelper {
   Future<List<DiaryEntry>> getDiaryEntries() async {
     Database db = await instance.database;
     var entries = await db.query('food_diary');
+    print('Teeest ${entries.map((c) => c)}');
+    print(DiaryEntry.fromMap(entries[0]));
     List<DiaryEntry> entryList = entries.isNotEmpty
         ? entries.map((c) => DiaryEntry.fromMap(c)).toList()
         : [];
