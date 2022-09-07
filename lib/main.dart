@@ -1,14 +1,17 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:math';
 
 import 'package:dieahnungslosen/database_helper.dart';
 import 'package:dieahnungslosen/diary_entry.dart';
+import 'package:dieahnungslosen/own_product.dart';
 import 'package:dieahnungslosen/product_preview.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:dieahnungslosen/navbar.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:intl/intl.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,6 +27,7 @@ class FoodDiary extends StatefulWidget {
 
 class FoodDiaryState extends State<FoodDiary> {
   String _barcode = "";
+  var formatter = new DateFormat('dd.MM.yyyy');
 
   @override
   Widget build(BuildContext context) {
@@ -32,46 +36,139 @@ class FoodDiaryState extends State<FoodDiary> {
         appBar: AppBar(
           title: const Text('Ernährungstagebuch'),
         ),
-        body: Center(
-          child: FutureBuilder<List<DiaryEntry>>(
-            future: DatabaseHelper.instance.getDiaryEntries(),
-            builder: (BuildContext context, AsyncSnapshot snapshot) {
-              if (!snapshot.hasData) {
-                return Center(child: Text('Lädt'));
-              }
-              return snapshot.data!.isEmpty
-                  ?
-              Center(
-                      child:
-                      Text('Keine Produkte gefunden'),
-                    )
-                  : ListView(
-                      children: snapshot.data!.map<Widget>((entry) async {
-                        return Slidable(
-                          actionPane: SlidableDrawerActionPane(),
-                          secondaryActions: [
-                            IconSlideAction(
-                              caption: 'Bearbeiten',
-                              color: Colors.black,
-                              icon: Icons.edit,
-                              onTap: () {},
-                            ),
-                            IconSlideAction(
-                                caption: 'Löschen',
-                                color: Colors.red,
-                                icon: Icons.delete,
-                                onTap: () {
-                                  DatabaseHelper.instance
-                                      .removeDiaryEntry(entry.diary_id!);
-                                })
-                          ],
-                          child: Text('test'),
-                        );
-                      }).toList(),
+        body: Container(
+            child: FutureBuilder<List<DiaryEntry>>(
+                future: DatabaseHelper.instance.getDiaryEntries(),
+                builder: (BuildContext context,
+                    AsyncSnapshot<List<DiaryEntry>> snapshot) {
+                  if (!snapshot.hasData) {
+                    return Center(
+                      child: Text('Loading...'),
                     );
-            },
-          ),
-        ),
+                  }
+                  return snapshot.data!.isEmpty
+                      ? Center(
+                          child: Text('Keine Einträge vorhanden'),
+                        )
+                      : ListView(
+                          children: snapshot.data!.map((entry) {
+                            return Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                  10.0, 0.0, 10.0, 0.0),
+                              child: Container(
+                                  decoration: BoxDecoration(
+                                      border: Border(
+                                    bottom: BorderSide(
+                                        width: 1.0, color: Colors.grey),
+                                    top: BorderSide(
+                                        width: 1.0, color: Colors.grey),
+                                  )),
+                                  child: InkWell(
+                                    onTap: () {
+                                      watchProduct(entry.food_id);
+                                    },
+                                    child: Slidable(
+                                        actionPane: SlidableDrawerActionPane(),
+                                        secondaryActions: [
+                                          IconSlideAction(
+                                            caption: 'Edit',
+                                            color: Colors.black45,
+                                            icon: Icons.edit,
+                                            onTap: () {},
+                                          ),
+                                          IconSlideAction(
+                                            caption: 'Delete',
+                                            color: Colors.red,
+                                            icon: Icons.delete,
+                                            onTap: () async {
+                                              await DatabaseHelper.instance
+                                                  .removeDiaryEntry(
+                                                      entry.diary_id!);
+                                              reloadPage(context, FoodDiary());
+                                            },
+                                          )
+                                        ],
+                                        child: GridView.count(
+                                          crossAxisCount: 3,
+                                          shrinkWrap: true,
+                                          childAspectRatio: 2,
+                                          children: <Widget>[
+                                            Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                FutureBuilder<String?>(
+                                                    future: DatabaseHelper
+                                                        .instance
+                                                        .getMarke(
+                                                            entry.food_id),
+                                                    builder:
+                                                        (context, snapshot) {
+                                                      if (snapshot.hasData) {
+                                                        return Container(
+                                                          child: Text(
+                                                              snapshot.data!,
+                                                              // textAlign:
+                                                              // TextAlign.left,
+                                                              style: TextStyle(
+                                                                  fontSize:
+                                                                      12)),
+                                                        );
+                                                      } else {
+                                                        return Text('noname');
+                                                      }
+                                                    }),
+                                                FutureBuilder<String?>(
+                                                    future: DatabaseHelper
+                                                        .instance
+                                                        .getName(entry.food_id),
+                                                    builder:
+                                                        (context, snapshot) {
+                                                      if (snapshot.hasData) {
+                                                        return Container(
+                                                          child: Text(
+                                                              snapshot.data!,
+                                                              // textAlign:
+                                                              // TextAlign.left,
+                                                              style: TextStyle(
+                                                                  fontSize:
+                                                                      15)),
+                                                        );
+                                                      } else {
+                                                        return Text('noname');
+                                                      }
+                                                    }),
+                                              ],
+                                            ),
+                                            Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                Text('Menge:'),
+                                                Text('${entry.weight} g/ml'),
+                                              ],
+                                            ),
+                                            Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                Text('Datum:'),
+                                                Text('${entry.date}'),
+                                              ],
+                                            ),
+                                          ],
+                                        )),
+                                  )),
+                            );
+                          }).toList(),
+                        );
+                })),
         floatingActionButton: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
@@ -123,16 +220,13 @@ class FoodDiaryState extends State<FoodDiary> {
             "#000000", 'Abbrechen', true, ScanMode.BARCODE)
         .then((value) => setState(() => _barcode = value));
   }
-}
 
-class eingabefeld extends StatelessWidget {
-  String title;
-  String decoration;
+  void reloadPage(BuildContext context, Widget page) {
+    Navigator.pushAndRemoveUntil(context,
+        MaterialPageRoute(builder: (context) => page), (route) => false);
+  }
 
-  eingabefeld(this.title, this.decoration);
-
-  @override
-  Widget build(BuildContext context) {
+  Widget eingabefeld(String title, String decoration) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -143,7 +237,56 @@ class eingabefeld extends StatelessWidget {
       // mainAxisAlignment: MainAxisAlignment.spaceAround,
     );
   }
+
+  watchProduct(int id) {
+    return showDialog(
+        context: context,
+        builder: (context) => FutureBuilder<List?>(
+            future: DatabaseHelper.instance.getOneProductFromId(id),
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                return AlertDialog(
+                  title: Text('Nährwerte pro 100g'),
+                  content: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('Kalorien: ${snapshot.data!.first['kalorien']} kcal'),
+                      Text('Fett: ${snapshot.data!.first['fett']} g'),
+                      Text(
+                          'davon gesättigte Fettsäuren: ${snapshot.data!.first['gesaettigt']} g'),
+                      Text(
+                          'Kohlenhydrate: ${snapshot.data!.first['kohlenhydrate']} g'),
+                      Text(
+                          'davon Zucker: ${snapshot.data!.first['davonZucker']} g'),
+                      Text('Eiweiß: ${snapshot.data!.first['eiweiss']} g'),
+                      Text('Salz: ${snapshot.data!.first['salz']} g'),
+                    ],
+                  ),
+                );
+              } else {
+                return AlertDialog(
+                  title: Text('Fehler'),
+                  content: Column(
+                    children: [Text('Keine Nährwerte gefunden')],
+                  ),
+                );
+              }
+            }));
+  }
 }
+
+// AlertDialog(
+// title: const Text('Manueller Eintrag'),
+// content: Column(
+// mainAxisSize: MainAxisSize.min,
+// children: <Widget>[
+// eingabefeld('Bezeichnung', 'Name'),
+// eingabefeld('Menge in Gramm', 'Menge'),
+// eingabefeld('bla bla', 'bla bla'),
+// ],
+// ),
+// )
 
 class successWindow extends StatelessWidget {
   Widget page;
@@ -157,14 +300,16 @@ class successWindow extends StatelessWidget {
         title: Text('Success'),
         content: IconButton(
           onPressed: () {
-            Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (context) => page),
-                (route) => false);
+            reloadPage(context, page);
           },
           icon: Icon(Icons.check, color: Colors.green),
         ),
       ),
     );
+  }
+
+  void reloadPage(BuildContext context, Widget page) {
+    Navigator.pushAndRemoveUntil(context,
+        MaterialPageRoute(builder: (context) => page), (route) => false);
   }
 }

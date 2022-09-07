@@ -73,6 +73,32 @@ class DatabaseHelper {
     return productsList;
   }
 
+  Future<List> getOneProductFromId(int id) async {
+    Database db = await DatabaseHelper.instance.database;
+    // get single row
+    List<String> columnsToSelect = [
+      'food_id',
+      'barcode',
+      'name',
+      'marke',
+      'menge',
+      'kalorien',
+      'fett',
+      'gesaettigt',
+      'kohlenhydrate',
+      'davonZucker',
+      'eiweiss',
+      'salz'
+    ];
+    String whereString = 'food_id = ?';
+    List<dynamic> whereArguments = [id];
+    List<Map> result = await db.query('food',
+        columns: columnsToSelect,
+        where: whereString,
+        whereArgs: whereArguments);
+    return result;
+  }
+
   Future<List> getOneProduct(String barcode) async {
     Database db = await DatabaseHelper.instance.database;
     // get single row
@@ -118,11 +144,10 @@ class DatabaseHelper {
   Future<List<DiaryEntry>> getDiaryEntries() async {
     Database db = await instance.database;
     var entries = await db.query('food_diary');
-    print('Teeest ${entries.map((c) => c)}');
-    print(DiaryEntry.fromMap(entries[0]));
     List<DiaryEntry> entryList = entries.isNotEmpty
         ? entries.map((c) => DiaryEntry.fromMap(c)).toList()
         : [];
+    print('###################${entryList.runtimeType}');
     return entryList;
   }
 
@@ -159,12 +184,27 @@ class DatabaseHelper {
         where: 'diary_id = ?', whereArgs: [entry.diary_id]);
   }
 
-  getFullName(int id) async {
+  Future<String?> getName(int id) async {
     // get a reference to the database
     Database db = await DatabaseHelper.instance.database;
 
     // get single row
-    List<String> columnsToSelect = ['food_id', 'name', 'marke'];
+    List<String> columnsToSelect = ['name'];
+    String whereString = 'food_id = ?';
+    List<dynamic> whereArguments = [id];
+    List<Map> result = await db.query('food',
+        columns: columnsToSelect,
+        where: whereString,
+        whereArgs: whereArguments);
+    String name = result.first['name'];
+    return '$name';
+  }
+  Future<String?> getMarke(int id) async {
+    // get a reference to the database
+    Database db = await DatabaseHelper.instance.database;
+
+    // get single row
+    List<String> columnsToSelect = ['marke'];
     String whereString = 'food_id = ?';
     List<dynamic> whereArguments = [id];
     List<Map> result = await db.query('food',
@@ -172,7 +212,7 @@ class DatabaseHelper {
         where: whereString,
         whereArgs: whereArguments);
     String marke = result.first['marke'];
-    String name = result.first['name'];
-    return '${marke.substring(1, marke.length - 1)} ${name.substring(1, marke.length - 1)}';
+    print('.$marke.');
+    return '$marke';
   }
 }

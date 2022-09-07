@@ -48,7 +48,8 @@ class ProductPreview extends StatelessWidget {
                       ],
                     );
                   } else {
-                    return Text('Keine Daten gefunden');
+                    return Text('Lädt...');
+
                   }
                 }),
           ),
@@ -56,9 +57,9 @@ class ProductPreview extends StatelessWidget {
             child: IconButton(
               onPressed: () async {
                 var now = new DateTime.now();
-                var formatter = new DateFormat('dd-MM-yyyy');
+                var formatter = new DateFormat('dd.MM.yyyy');
                 String formattedDate = formatter.format(now);
-                  DiaryEntry entry = DiaryEntry(
+                DiaryEntry entry = DiaryEntry(
                   weight: double.parse(mengeController.text),
                   date: formattedDate,
                   food_id: foodId,
@@ -121,7 +122,7 @@ class ProductPreview extends StatelessWidget {
           kohlenhydrate: jsonEncode(result.product?.nutriments?.carbohydrates),
           davonZucker: jsonEncode(result.product?.nutriments?.sugars),
           eiweiss: jsonEncode(result.product?.nutriments?.proteins),
-          salz: jsonDecode(jsonEncode(result.product))['salt_100g']);
+          salz: jsonEncode(result.product?.nutriments?.sodium));
       DatabaseHelper.instance.addProduct(productApi);
       return productApi;
     } else {

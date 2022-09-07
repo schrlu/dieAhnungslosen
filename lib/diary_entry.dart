@@ -1,5 +1,7 @@
 import 'dart:ffi';
 
+import 'package:intl/intl.dart';
+
 class DiaryEntry {
   final int? diary_id;
   final double weight;
