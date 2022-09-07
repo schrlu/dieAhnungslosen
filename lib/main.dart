@@ -149,7 +149,7 @@ class FoodDiaryState extends State<FoodDiary> {
                                                   MainAxisAlignment.center,
                                               children: [
                                                 Text('Menge:'),
-                                                Text('${entry.weight} g/ml'),
+                                                Text('${entry.weight} g/ml')
                                               ],
                                             ),
                                             Column(
@@ -159,7 +159,7 @@ class FoodDiaryState extends State<FoodDiary> {
                                                   MainAxisAlignment.center,
                                               children: [
                                                 Text('Datum:'),
-                                                Text('${entry.date}'),
+                                                Text('${formatter.format(DateTime.parse(entry.date))}'),
                                               ],
                                             ),
                                           ],
@@ -195,6 +195,7 @@ class FoodDiaryState extends State<FoodDiary> {
                           ],
                         ),
                       )),
+
               tooltip: 'Increment',
               child: const Icon(Icons.add),
             ),
@@ -246,7 +247,7 @@ class FoodDiaryState extends State<FoodDiary> {
             builder: (context, snapshot) {
               if (snapshot.hasData) {
                 return AlertDialog(
-                  title: Text('Nährwerte pro 100g'),
+                  title: Text('Nährwerte pro 100g/ml'),
                   content: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
@@ -261,6 +262,7 @@ class FoodDiaryState extends State<FoodDiary> {
                           'davon Zucker: ${snapshot.data!.first['davonZucker']} g'),
                       Text('Eiweiß: ${snapshot.data!.first['eiweiss']} g'),
                       Text('Salz: ${snapshot.data!.first['salz']} g'),
+                      Text('menge_ml ${snapshot.data!.first['menge_ml'].runtimeType}')
                     ],
                   ),
                 );

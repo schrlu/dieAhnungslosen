@@ -35,7 +35,8 @@ class DatabaseHelper {
       barcode STRING,
       name STRING,
       marke STRING,
-      menge INTEGER,
+      menge STRING,
+      menge_ml DECIMAL,
       kalorien INTEGER,
       fett DECIMAL,
       gesaettigt DECIMAL,
@@ -82,6 +83,7 @@ class DatabaseHelper {
       'name',
       'marke',
       'menge',
+      'menge_ml',
       'kalorien',
       'fett',
       'gesaettigt',
@@ -108,6 +110,7 @@ class DatabaseHelper {
       'name',
       'marke',
       'menge',
+      'menge_ml',
       'kalorien',
       'fett',
       'gesaettigt',
@@ -127,7 +130,6 @@ class DatabaseHelper {
 
   Future<bool> checkProduct(String barcode) async {
     // get a reference to the database
-
     Database db = await DatabaseHelper.instance.database;
     // get single row
     List<String> columnsToSelect = ['barcode'];
@@ -137,17 +139,15 @@ class DatabaseHelper {
         columns: columnsToSelect,
         where: whereString,
         whereArgs: whereArguments);
-
     return result.isNotEmpty;
   }
 
   Future<List<DiaryEntry>> getDiaryEntries() async {
     Database db = await instance.database;
-    var entries = await db.query('food_diary');
+    var entries = await db.query('food_diary', orderBy: 'date ASC');
     List<DiaryEntry> entryList = entries.isNotEmpty
         ? entries.map((c) => DiaryEntry.fromMap(c)).toList()
         : [];
-    print('###################${entryList.runtimeType}');
     return entryList;
   }
 
@@ -212,7 +212,6 @@ class DatabaseHelper {
         where: whereString,
         whereArgs: whereArguments);
     String marke = result.first['marke'];
-    print('.$marke.');
     return '$marke';
   }
 }

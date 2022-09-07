@@ -27,7 +27,7 @@ class DiaryEntry {
   factory DiaryEntry.fromMap(Map<String, dynamic> map) {
     DiaryEntry diaryEntry = DiaryEntry(
     diary_id:  map['diary_id'] as int,
-    weight:  map['weight'].toDouble(),
+    weight:  map['weight'].toDouble() as double,
     date:  map['date'] as String,
     food_id:  map['food_id'] as int,
     );

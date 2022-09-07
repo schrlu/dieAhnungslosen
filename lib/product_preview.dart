@@ -13,12 +13,18 @@ import 'navbar.dart';
 import 'own_product.dart';
 import 'package:intl/intl.dart';
 
-class ProductPreview extends StatelessWidget {
+class ProductPreview extends StatefulWidget {
   final String _barcode;
 
   ProductPreview(this._barcode);
 
+  @override
+  State<ProductPreview> createState() => _ProductPreviewState();
+}
+
+class _ProductPreviewState extends State<ProductPreview> {
   OwnProduct? prod;
+  int _groupValue = 1;
 
   @override
   Widget build(BuildContext context) {
@@ -33,49 +39,73 @@ class ProductPreview extends StatelessWidget {
         children: [
           Center(
             child: FutureBuilder<List?>(
-                future: getProduct(_barcode),
+                future: getProduct(widget._barcode),
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
                     var name = snapshot.data!.first['name'];
                     var marke = snapshot.data!.first['marke'];
                     foodId = snapshot.data!.first['food_id'];
-                    // prod = snapshot.data!;
                     return Column(
                       children: [
                         buildTextFormFieldDisabled('Produktname', name),
                         buildTextFormFieldDisabled('Produktmarke', marke),
-                        buildTextFormField('Menge in g/ml', mengeController),
+                        ListTile(
+                          title: Text('Menge in g/ml'),
+                        ),
+                        RadioListTile(
+                          value: 1,
+                          groupValue: _groupValue,
+                          onChanged: (newValue) => setState(() =>
+                              _groupValue = int.parse(newValue.toString())),
+                          title: Text(
+                              'Standardmenge: (${snapshot.data!.first['menge_ml']})'),
+                        ),
+                        RadioListTile(
+                          value: 2,
+                          groupValue: _groupValue,
+                          onChanged: (newValue) => setState(() =>
+                              _groupValue = int.parse(newValue.toString())),
+                          title: buildTextFormField(
+                              'Andere Menge', mengeController),
+                        ),
+                        IconButton(
+                          onPressed: () async {
+                            var formatter =
+                                new DateFormat('yyyy-MM-dd hh:mm:ss');
+                            DiaryEntry entry = DiaryEntry(
+                              weight: getWeight(
+                                  snapshot.data!.first['menge_ml'],
+                                  mengeController.text),
+                              date: formatter.format(DateTime.now()).toString(),
+                              food_id: foodId,
+                            );
+                            DatabaseHelper.instance.addDiaryEntry(entry);
+                            Navigator.pushAndRemoveUntil(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => FoodDiary()),
+                                (route) => false);
+                          },
+                          icon: Icon(Icons.check, color: Colors.green),
+                        )
                       ],
                     );
                   } else {
                     return Text('Lädt...');
-
                   }
                 }),
           ),
-          Center(
-            child: IconButton(
-              onPressed: () async {
-                var now = new DateTime.now();
-                var formatter = new DateFormat('dd.MM.yyyy');
-                String formattedDate = formatter.format(now);
-                DiaryEntry entry = DiaryEntry(
-                  weight: double.parse(mengeController.text),
-                  date: formattedDate,
-                  food_id: foodId,
-                );
-                DatabaseHelper.instance.addDiaryEntry(entry);
-                Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (context) => FoodDiary()),
-                    (route) => false);
-              },
-              icon: Icon(Icons.check, color: Colors.green),
-            ),
-          )
         ],
       ),
     );
+  }
+
+  double getWeight(int weight, String controller) {
+    if (_groupValue == 1) {
+      return double.parse(weight.toString());
+    } else {
+      return double.parse(controller);
+    }
   }
 
   TextFormField buildTextFormFieldDisabled(String decoration, [name]) {
@@ -87,11 +117,16 @@ class ProductPreview extends StatelessWidget {
     );
   }
 
+  bool checkGroupValue() {
+    return _groupValue != 1;
+  }
+
   TextFormField buildTextFormField(
       String decoration, TextEditingController controller) {
     return TextFormField(
       keyboardType: TextInputType.number,
       controller: controller,
+      enabled: checkGroupValue(),
       decoration: (InputDecoration(
           contentPadding: EdgeInsets.symmetric(horizontal: 20),
           hintText: '$decoration')),
@@ -116,6 +151,7 @@ class ProductPreview extends StatelessWidget {
           name: jsonDecode(jsonEncode(result.product))['product_name'],
           marke: jsonDecode(jsonEncode(result.product))['brands'],
           menge: jsonDecode(jsonEncode(result.product))['quantity'],
+          menge_ml: jsonDecode(jsonEncode(result.product))['product_quantity'],
           kalorien: jsonEncode(result.product?.nutriments?.energyKcal100g),
           fett: jsonEncode(result.product?.nutriments?.fat),
           gesaettigt: jsonEncode(result.product?.nutriments?.saturatedFat),

@@ -6,6 +6,7 @@ class OwnProduct {
   String? name;
   String? marke;
   String? menge;
+  double? menge_ml;
   String? kalorien;
   String? fett;
   String? gesaettigt;
@@ -20,6 +21,7 @@ class OwnProduct {
       this.name,
       this.marke,
       this.menge,
+        this.menge_ml,
       this.kalorien,
       this.fett,
       this.gesaettigt,
@@ -35,6 +37,7 @@ class OwnProduct {
       'name': name,
       'marke': marke,
       'menge': menge,
+      'menge_ml': menge_ml,
       'kalorien': kalorien,
       'fett': fett,
       'gesaettigt': gesaettigt,
@@ -52,6 +55,7 @@ class OwnProduct {
         name: map['name'],
         marke: map['marke'],
         menge: map['menge'],
+        menge_ml: map['menge_ml'].toDouble() as double,
         kalorien: map['kalorien'],
         fett: map['fett'],
         gesaettigt: map['gesaettigt'],
