@@ -178,9 +178,10 @@ class DatabaseHelper {
         where: 'food_id = ?', whereArgs: [product.food_id]);
   }
 
-  Future<int> updateDiaryEntry(DiaryEntry entry) async {
+  updateDiaryEntry(DiaryEntry entry, double weight) async {
     Database db = await instance.database;
-    return await db.update('diary_entry', entry.toMap(),
+    entry.weight = weight;
+    return await db.update('food_diary', entry.toMap(),
         where: 'diary_id = ?', whereArgs: [entry.diary_id]);
   }
 

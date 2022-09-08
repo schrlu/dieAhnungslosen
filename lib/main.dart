@@ -28,9 +28,10 @@ class FoodDiary extends StatefulWidget {
 class FoodDiaryState extends State<FoodDiary> {
   String _barcode = "";
   var formatter = new DateFormat('dd.MM.yyyy');
-
+  TextEditingController mengeController = TextEditingController();
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
         drawer: NavBar(),
         appBar: AppBar(
@@ -74,7 +75,9 @@ class FoodDiaryState extends State<FoodDiary> {
                                             caption: 'Edit',
                                             color: Colors.black45,
                                             icon: Icons.edit,
-                                            onTap: () {},
+                                            onTap: () {
+                                              editProduct(entry);
+                                            },
                                           ),
                                           IconSlideAction(
                                             caption: 'Delete',
@@ -172,33 +175,33 @@ class FoodDiaryState extends State<FoodDiary> {
         floatingActionButton: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            FloatingActionButton(
-              heroTag: 'Manual-Button',
-              onPressed: () => showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                        title: const Text('Manueller Eintrag'),
-                        content: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: <Widget>[
-                            eingabefeld('Bezeichnung', 'Name'),
-                            eingabefeld('Menge in Gramm', 'Menge'),
-                            eingabefeld('bla bla', 'bla bla'),
-                            TextButton(
-                                onPressed: () => {
-                                      showDialog(
-                                          context: context,
-                                          builder: (context) =>
-                                              successWindow(FoodDiary()))
-                                    },
-                                child: Text('Submit')),
-                          ],
-                        ),
-                      )),
-
-              tooltip: 'Increment',
-              child: const Icon(Icons.add),
-            ),
+            // FloatingActionButton(
+            //   heroTag: 'Manual-Button',
+            //   onPressed: () => showDialog(
+            //       context: context,
+            //       builder: (context) => AlertDialog(
+            //             title: const Text('Manueller Eintrag'),
+            //             content: Column(
+            //               mainAxisSize: MainAxisSize.min,
+            //               children: <Widget>[
+            //                 eingabefeld('Bezeichnung', 'Name'),
+            //                 eingabefeld('Menge in Gramm', 'Menge'),
+            //                 eingabefeld('bla bla', 'bla bla'),
+            //                 TextButton(
+            //                     onPressed: () => {
+            //                           showDialog(
+            //                               context: context,
+            //                               builder: (context) =>
+            //                                   successWindow(FoodDiary()))
+            //                         },
+            //                     child: Text('Submit')),
+            //               ],
+            //             ),
+            //           )),
+            //
+            //   tooltip: 'Increment',
+            //   child: const Icon(Icons.add),
+            // ),
             Padding(
                 padding: EdgeInsets.only(top: 15),
                 child: FloatingActionButton(
@@ -238,7 +241,46 @@ class FoodDiaryState extends State<FoodDiary> {
       // mainAxisAlignment: MainAxisAlignment.spaceAround,
     );
   }
-
+  editProduct(DiaryEntry entry) {
+    return showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: FutureBuilder<String?>(
+              future: DatabaseHelper.instance
+                  .getName(entry.food_id),
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  return Container(
+                    child: Text(snapshot.data!,
+                        // textAlign:
+                        // TextAlign.left,
+                        style: TextStyle(
+                            fontSize: 25)),
+                  );
+                } else {
+                  return Text('noname');
+                }
+              }),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text('Menge in g/ml'),
+              TextField(
+                keyboardType: TextInputType.number,
+                controller: mengeController,
+                decoration: InputDecoration(hintText: 'Neue Menge'),
+              ),
+              TextButton(
+                  onPressed: () => {
+                    DatabaseHelper.instance.updateDiaryEntry(entry, double.parse(mengeController.text)),
+                    reloadPage(context, FoodDiary())
+                  },
+                  child: Text('Submit')),
+            ],
+          ),
+        ));
+  }
   watchProduct(int id) {
     return showDialog(
         context: context,
@@ -262,7 +304,6 @@ class FoodDiaryState extends State<FoodDiary> {
                           'davon Zucker: ${snapshot.data!.first['davonZucker']} g'),
                       Text('Eiweiß: ${snapshot.data!.first['eiweiss']} g'),
                       Text('Salz: ${snapshot.data!.first['salz']} g'),
-                      Text('menge_ml ${snapshot.data!.first['menge_ml'].runtimeType}')
                     ],
                   ),
                 );

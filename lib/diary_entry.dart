@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 
 class DiaryEntry {
   final int? diary_id;
-  final double weight;
+  double weight;
   final String date;
   final int food_id;
 
