@@ -1,10 +1,5 @@
-import 'dart:convert';
-import 'dart:developer';
-import 'dart:math';
-
 import 'package:dieahnungslosen/database_helper.dart';
 import 'package:dieahnungslosen/diary_entry.dart';
-import 'package:dieahnungslosen/own_product.dart';
 import 'package:dieahnungslosen/product_preview.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -15,7 +10,7 @@ import 'package:intl/intl.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(MaterialApp(home: FoodDiary()));
+  runApp(const MaterialApp(home: FoodDiary()));
 }
 
 class FoodDiary extends StatefulWidget {
@@ -27,151 +22,151 @@ class FoodDiary extends StatefulWidget {
 
 class FoodDiaryState extends State<FoodDiary> {
   String _barcode = "";
-  var formatter = new DateFormat('dd.MM.yyyy');
+  var formatter = DateFormat('dd.MM.yyyy');
   TextEditingController mengeController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
         drawer: NavBar(),
         appBar: AppBar(
           title: const Text('Ernährungstagebuch'),
         ),
-        body: Container(
-            child: FutureBuilder<List<DiaryEntry>>(
-                future: DatabaseHelper.instance.getDiaryEntries(),
-                builder: (BuildContext context,
-                    AsyncSnapshot<List<DiaryEntry>> snapshot) {
-                  if (!snapshot.hasData) {
-                    return Center(
-                      child: Text('Loading...'),
-                    );
-                  }
-                  return snapshot.data!.isEmpty
-                      ? Center(
-                          child: Text('Keine Einträge vorhanden'),
-                        )
-                      : ListView(
-                          children: snapshot.data!.map((entry) {
-                            return Padding(
-                              padding: const EdgeInsets.fromLTRB(
-                                  10.0, 0.0, 10.0, 0.0),
-                              child: Container(
-                                  decoration: BoxDecoration(
-                                      border: Border(
-                                    bottom: BorderSide(
-                                        width: 1.0, color: Colors.grey),
-                                    top: BorderSide(
-                                        width: 1.0, color: Colors.grey),
-                                  )),
-                                  child: InkWell(
-                                    onTap: () {
-                                      watchProduct(entry.food_id);
-                                    },
-                                    child: Slidable(
-                                        actionPane: SlidableDrawerActionPane(),
-                                        secondaryActions: [
-                                          IconSlideAction(
-                                            caption: 'Edit',
-                                            color: Colors.black45,
-                                            icon: Icons.edit,
-                                            onTap: () {
-                                              editProduct(entry);
-                                            },
-                                          ),
-                                          IconSlideAction(
-                                            caption: 'Delete',
-                                            color: Colors.red,
-                                            icon: Icons.delete,
-                                            onTap: () async {
-                                              await DatabaseHelper.instance
-                                                  .removeDiaryEntry(
-                                                      entry.diary_id!);
-                                              reloadPage(context, FoodDiary());
-                                            },
-                                          )
-                                        ],
-                                        child: GridView.count(
-                                          crossAxisCount: 3,
-                                          shrinkWrap: true,
-                                          childAspectRatio: 2,
-                                          children: <Widget>[
-                                            Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                FutureBuilder<String?>(
-                                                    future: DatabaseHelper
-                                                        .instance
-                                                        .getMarke(
-                                                            entry.food_id),
-                                                    builder:
-                                                        (context, snapshot) {
-                                                      if (snapshot.hasData) {
-                                                        return Container(
-                                                          child: Text(
-                                                              snapshot.data!,
-                                                              // textAlign:
-                                                              // TextAlign.left,
-                                                              style: TextStyle(
-                                                                  fontSize:
-                                                                      12)),
-                                                        );
-                                                      } else {
-                                                        return Text('noname');
-                                                      }
-                                                    }),
-                                                FutureBuilder<String?>(
-                                                    future: DatabaseHelper
-                                                        .instance
-                                                        .getName(entry.food_id),
-                                                    builder:
-                                                        (context, snapshot) {
-                                                      if (snapshot.hasData) {
-                                                        return Container(
-                                                          child: Text(
-                                                              snapshot.data!,
-                                                              // textAlign:
-                                                              // TextAlign.left,
-                                                              style: TextStyle(
-                                                                  fontSize:
-                                                                      15)),
-                                                        );
-                                                      } else {
-                                                        return Text('noname');
-                                                      }
-                                                    }),
-                                              ],
-                                            ),
-                                            Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                Text('Menge:'),
-                                                Text('${entry.weight} g/ml')
-                                              ],
-                                            ),
-                                            Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                Text('Datum:'),
-                                                Text('${formatter.format(DateTime.parse(entry.date))}'),
-                                              ],
-                                            ),
+        body: FutureBuilder<List<DiaryEntry>>(
+            future: DatabaseHelper.instance.getDiaryEntries(),
+            builder: (BuildContext context,
+                AsyncSnapshot<List<DiaryEntry>> snapshot) {
+              if (!snapshot.hasData) {
+                return const Center(
+                  child: Text('Loading...'),
+                );
+              }
+              return snapshot.data!.isEmpty
+                  ? Center(
+                      child: Text('Keine Einträge vorhanden'),
+                    )
+                  : ListView(
+                      children: snapshot.data!.map((entry) {
+                        return Padding(
+                          padding: const EdgeInsets.fromLTRB(
+                              10.0, 0.0, 10.0, 0.0),
+                          child: Container(
+                              decoration: BoxDecoration(
+                                  border: Border(
+                                bottom: BorderSide(
+                                    width: 1.0, color: Colors.grey),
+                                top: BorderSide(
+                                    width: 1.0, color: Colors.grey),
+                              )),
+                              child: InkWell(
+                                onTap: () {
+                                  watchProduct(entry.food_id);
+                                },
+                                child: Slidable(
+                                    actionPane: SlidableDrawerActionPane(),
+                                    secondaryActions: [
+                                      IconSlideAction(
+                                        caption: 'Edit',
+                                        color: Colors.black45,
+                                        icon: Icons.edit,
+                                        onTap: () {
+                                          editProduct(entry);
+                                        },
+                                      ),
+                                      IconSlideAction(
+                                        caption: 'Delete',
+                                        color: Colors.red,
+                                        icon: Icons.delete,
+                                        onTap: () async {
+                                          await DatabaseHelper.instance
+                                              .removeDiaryEntry(
+                                                  entry.diary_id!);
+                                          reloadPage(context, FoodDiary());
+                                        },
+                                      )
+                                    ],
+                                    child: GridView.count(
+                                      crossAxisCount: 3,
+                                      shrinkWrap: true,
+                                      childAspectRatio: 2,
+                                      children: <Widget>[
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            FutureBuilder<String?>(
+                                                future: DatabaseHelper
+                                                    .instance
+                                                    .getMarke(
+                                                        entry.food_id),
+                                                builder:
+                                                    (context, snapshot) {
+                                                  if (snapshot.hasData) {
+                                                    return Container(
+                                                      child: Text(
+                                                          snapshot.data!,
+                                                          // textAlign:
+                                                          // TextAlign.left,
+                                                          style: TextStyle(
+                                                              fontSize:
+                                                                  12)),
+                                                    );
+                                                  } else {
+                                                    return Text('noname');
+                                                  }
+                                                }),
+                                            FutureBuilder<String?>(
+                                                future: DatabaseHelper
+                                                    .instance
+                                                    .getName(entry.food_id),
+                                                builder:
+                                                    (context, snapshot) {
+                                                  if (snapshot.hasData) {
+                                                    return Container(
+                                                      child: Text(
+                                                          snapshot.data!,
+                                                          // textAlign:
+                                                          // TextAlign.left,
+                                                          style: TextStyle(
+                                                              fontSize:
+                                                                  15)),
+                                                    );
+                                                  } else {
+                                                    return Text('noname');
+                                                  }
+                                                }),
                                           ],
-                                        )),
-                                  )),
-                            );
-                          }).toList(),
+                                        ),
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Text('Menge:'),
+                                            Text('${entry.weight} g/ml')
+                                          ],
+                                        ),
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Text('Datum:'),
+                                            Text(
+                                                '${formatter.format(DateTime.parse(entry.date))}'),
+                                          ],
+                                        ),
+                                      ],
+                                    )),
+                              )),
                         );
-                })),
+                      }).toList(),
+                    );
+            }),
         floatingActionButton: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
@@ -241,46 +236,47 @@ class FoodDiaryState extends State<FoodDiary> {
       // mainAxisAlignment: MainAxisAlignment.spaceAround,
     );
   }
+
   editProduct(DiaryEntry entry) {
     return showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: FutureBuilder<String?>(
-              future: DatabaseHelper.instance
-                  .getName(entry.food_id),
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  return Container(
-                    child: Text(snapshot.data!,
-                        // textAlign:
-                        // TextAlign.left,
-                        style: TextStyle(
-                            fontSize: 25)),
-                  );
-                } else {
-                  return Text('noname');
-                }
-              }),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text('Menge in g/ml'),
-              TextField(
-                keyboardType: TextInputType.number,
-                controller: mengeController,
-                decoration: InputDecoration(hintText: 'Neue Menge'),
+              title: FutureBuilder<String?>(
+                  future: DatabaseHelper.instance.getName(entry.food_id),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      return Container(
+                        child: Text(snapshot.data!,
+                            // textAlign:
+                            // TextAlign.left,
+                            style: TextStyle(fontSize: 25)),
+                      );
+                    } else {
+                      return Text('noname');
+                    }
+                  }),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text('Menge in g/ml'),
+                  TextField(
+                    keyboardType: TextInputType.number,
+                    controller: mengeController,
+                    decoration: InputDecoration(hintText: 'Neue Menge'),
+                  ),
+                  TextButton(
+                      onPressed: () => {
+                            DatabaseHelper.instance.updateDiaryEntry(
+                                entry, double.parse(mengeController.text)),
+                            reloadPage(context, FoodDiary())
+                          },
+                      child: Text('Submit')),
+                ],
               ),
-              TextButton(
-                  onPressed: () => {
-                    DatabaseHelper.instance.updateDiaryEntry(entry, double.parse(mengeController.text)),
-                    reloadPage(context, FoodDiary())
-                  },
-                  child: Text('Submit')),
-            ],
-          ),
-        ));
+            ));
   }
+
   watchProduct(int id) {
     return showDialog(
         context: context,
@@ -294,7 +290,8 @@ class FoodDiaryState extends State<FoodDiary> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('Kalorien: ${snapshot.data!.first['kalorien']} kcal'),
+                      Text(
+                          'Kalorien: ${snapshot.data!.first['kalorien']} kcal'),
                       Text('Fett: ${snapshot.data!.first['fett']} g'),
                       Text(
                           'davon gesättigte Fettsäuren: ${snapshot.data!.first['gesaettigt']} g'),
@@ -318,18 +315,6 @@ class FoodDiaryState extends State<FoodDiary> {
             }));
   }
 }
-
-// AlertDialog(
-// title: const Text('Manueller Eintrag'),
-// content: Column(
-// mainAxisSize: MainAxisSize.min,
-// children: <Widget>[
-// eingabefeld('Bezeichnung', 'Name'),
-// eingabefeld('Menge in Gramm', 'Menge'),
-// eingabefeld('bla bla', 'bla bla'),
-// ],
-// ),
-// )
 
 class successWindow extends StatelessWidget {
   Widget page;

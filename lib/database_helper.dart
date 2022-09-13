@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:dieahnungslosen/diary_entry.dart';
+import 'package:dieahnungslosen/fridge_entry.dart';
 import 'package:dieahnungslosen/main.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:openfoodfacts/model/Product.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -58,8 +60,9 @@ class DatabaseHelper {
     await db.execute('''
     CREATE TABLE fridge(
       fridge_id INTEGER PRIMARY KEY AUTOINCREMENT,
-      quantity INTEGER,
+      amount INTEGER,
       food_id INTEGER,
+      mhd STRING,
       FOREIGN KEY (food_id) REFERENCES food (food_id)
       )
     ''');
@@ -149,6 +152,13 @@ class DatabaseHelper {
         ? entries.map((c) => DiaryEntry.fromMap(c)).toList()
         : [];
     return entryList;
+  }Future<List<FridgeEntry>> getFridgeEntries() async {
+    Database db = await instance.database;
+    var entries = await db.query('fridge', orderBy: 'mhd DESC');
+    List<FridgeEntry> entryList = entries.isNotEmpty
+        ? entries.map((c) => FridgeEntry.fromMap(c)).toList()
+        : [];
+    return entryList;
   }
 
   Future<int> addProduct(OwnProduct product) async {
@@ -160,6 +170,10 @@ class DatabaseHelper {
     Database db = await instance.database;
     return await db.insert('food_diary', entry.toMap());
   }
+  Future<int> addFridgeEntry(FridgeEntry entry) async {
+    Database db = await instance.database;
+    return await db.insert('fridge', entry.toMap());
+  }
 
   Future<int> removeProduct(int id) async {
     Database db = await instance.database;
@@ -170,6 +184,10 @@ class DatabaseHelper {
     Database db = await instance.database;
     return await db
         .delete('food_diary', where: 'diary_id = ?', whereArgs: [id]);
+  }Future<int> removeFridgeEntry(int id) async {
+    Database db = await instance.database;
+    return await db
+        .delete('fridge', where: 'fridge_id = ?', whereArgs: [id]);
   }
 
   Future<int> updateProduct(OwnProduct product) async {
@@ -183,6 +201,15 @@ class DatabaseHelper {
     entry.weight = weight;
     return await db.update('food_diary', entry.toMap(),
         where: 'diary_id = ?', whereArgs: [entry.diary_id]);
+  }
+  updateFridgeEntry(FridgeEntry entry, DateTime mhd, int amount) async {
+    var formatter =
+    DateFormat('yyyy-MM-dd hh:mm:ss');
+    Database db = await instance.database;
+    entry.mhd = formatter.format(mhd);
+    entry.amount = amount;
+    return await db.update('food_diary', entry.toMap(),
+        where: 'diary_id = ?', whereArgs: [entry.fridge_id]);
   }
 
   Future<String?> getName(int id) async {

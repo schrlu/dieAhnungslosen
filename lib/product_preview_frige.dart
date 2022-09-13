@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:ffi';
 import 'package:dieahnungslosen/database_helper.dart';
 import 'package:dieahnungslosen/diary_entry.dart';
+import 'package:dieahnungslosen/fridge.dart';
 import 'package:dieahnungslosen/main.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -9,26 +10,28 @@ import 'package:openfoodfacts/openfoodfacts.dart';
 import 'package:openfoodfacts/utils/LanguageHelper.dart';
 import 'package:openfoodfacts/utils/ProductFields.dart';
 import 'package:openfoodfacts/utils/ProductQueryConfigurations.dart';
+import 'fridge_entry.dart';
 import 'navbar.dart';
 import 'own_product.dart';
 import 'package:intl/intl.dart';
 
-class ProductPreview extends StatefulWidget {
+class ProductPreviewFridge extends StatefulWidget {
   final String _barcode;
 
-  ProductPreview(this._barcode);
+  ProductPreviewFridge(this._barcode);
 
   @override
-  State<ProductPreview> createState() => _ProductPreviewState();
+  State<ProductPreviewFridge> createState() => _ProductPreviewFridgeState();
 }
 
-class _ProductPreviewState extends State<ProductPreview> {
+class _ProductPreviewFridgeState extends State<ProductPreviewFridge> {
   OwnProduct? prod;
   int _groupValue = 1;
-
+  DateFormat formatter = DateFormat('dd.MM.yyyy');
+  DateTime? mhd = DateTime.now();
   @override
   Widget build(BuildContext context) {
-    TextEditingController mengeController = TextEditingController();
+    TextEditingController anzahlController = TextEditingController();
     var foodId = 0;
     return Scaffold(
       drawer: NavBar(),
@@ -44,46 +47,40 @@ class _ProductPreviewState extends State<ProductPreview> {
                   if (snapshot.hasData) {
                     var name = snapshot.data!.first['name'];
                     var marke = snapshot.data!.first['marke'];
+                    var menge = snapshot.data!.first['menge'];
                     foodId = snapshot.data!.first['food_id'];
                     return Column(
                       children: [
                         buildTextFormFieldDisabled('Produktname', name),
                         buildTextFormFieldDisabled('Produktmarke', marke),
+                        buildTextFormFieldDisabled('Menge', menge),
+                        ListTile(title: Text('Mindesthaltbarkeitsdatum: ')),
+                        IconButton(
+                          icon: Icon(Icons.edit_calendar),
+                          onPressed: () async {
+                            mhd = await showDatePicker(context: context,
+                                initialDate: DateTime.now(),
+                                firstDate: DateTime(2022),
+                                lastDate: DateTime(2099, 12, 31));
+                          },),
                         ListTile(
-                          title: Text('Menge in g/ml'),
+                          title: Text('Anzahl: '),
                         ),
-                        RadioListTile(
-                          value: 1,
-                          groupValue: _groupValue,
-                          onChanged: (newValue) => setState(() =>
-                              _groupValue = int.parse(newValue.toString())),
-                          title: Text(
-                              'Standardmenge: (${snapshot.data!.first['menge_ml']})'),
-                        ),
-                        RadioListTile(
-                          value: 2,
-                          groupValue: _groupValue,
-                          onChanged: (newValue) => setState(() =>
-                              _groupValue = int.parse(newValue.toString())),
-                          title: buildTextFormField(
-                              'Andere Menge', mengeController),
-                        ),
+                        buildTextFormField('Anzahl', anzahlController),
                         IconButton(
                           onPressed: () async {
                             var formatter =
                                 DateFormat('yyyy-MM-dd hh:mm:ss');
-                            DiaryEntry entry = DiaryEntry(
-                              weight: getWeight(
-                                  snapshot.data!.first['menge_ml'],
-                                  mengeController.text),
-                              date: formatter.format(DateTime.now()).toString(),
+                            FridgeEntry entry = FridgeEntry(
+                              amount: int.parse(anzahlController.text),
+                              mhd: formatter.format(mhd).toString(),
                               food_id: foodId,
                             );
-                            DatabaseHelper.instance.addDiaryEntry(entry);
+                            DatabaseHelper.instance.addFridgeEntry(entry);
                             Navigator.pushAndRemoveUntil(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (context) => FoodDiary()),
+                                    builder: (context) => WhatsInMyFridge()),
                                 (route) => false);
                           },
                           icon: Icon(Icons.check, color: Colors.green),
@@ -126,7 +123,6 @@ class _ProductPreviewState extends State<ProductPreview> {
     return TextFormField(
       keyboardType: TextInputType.number,
       controller: controller,
-      enabled: checkGroupValue(),
       decoration: (InputDecoration(
           contentPadding: EdgeInsets.symmetric(horizontal: 20),
           hintText: '$decoration')),
