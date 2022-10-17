@@ -71,7 +71,7 @@ class _ProductPreviewState extends State<ProductPreview> {
                         IconButton(
                           onPressed: () async {
                             var formatter =
-                                DateFormat('yyyy-MM-dd hh:mm:ss');
+                                DateFormat('yyyy-MM-dd');
                             DiaryEntry entry = DiaryEntry(
                               weight: getWeight(
                                   snapshot.data!.first['menge_ml'],
@@ -79,7 +79,7 @@ class _ProductPreviewState extends State<ProductPreview> {
                               date: formatter.format(DateTime.now()).toString(),
                               food_id: foodId,
                             );
-                            DatabaseHelper.instance.addDiaryEntry(entry);
+                           await DatabaseHelper.instance.addDiaryEntry(entry);
                             Navigator.pushAndRemoveUntil(
                                 context,
                                 MaterialPageRoute(

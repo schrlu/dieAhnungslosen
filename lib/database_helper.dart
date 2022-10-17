@@ -2,10 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:dieahnungslosen/diary_entry.dart';
 import 'package:dieahnungslosen/fridge_entry.dart';
-import 'package:dieahnungslosen/main.dart';
-import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-import 'package:openfoodfacts/model/Product.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
@@ -52,7 +49,7 @@ class DatabaseHelper {
       CREATE TABLE food_diary(
       diary_id INTEGER PRIMARY KEY AUTOINCREMENT,
       weight DECIMAL,
-      date STRING,
+      date DATE,
       food_id INTEGER,
       FOREIGN KEY (food_id) REFERENCES food (food_id)
       )
@@ -101,6 +98,7 @@ class DatabaseHelper {
         columns: columnsToSelect,
         where: whereString,
         whereArgs: whereArguments);
+    print(result);
     return result;
   }
 
@@ -131,6 +129,14 @@ class DatabaseHelper {
     return result;
   }
 
+  Future<List> getOneDiaryEntry(int id) async {
+    Database db = await DatabaseHelper.instance.database;
+    // get single row
+    List<Map> result = await db.rawQuery(
+        '''SELECT diary_id, weight, date, food_id FROM food_diary WHERE food_id = $id AND date = (SELECT DATE('now')) ''');
+    return result;
+  }
+
   Future<bool> checkProduct(String barcode) async {
     // get a reference to the database
     Database db = await DatabaseHelper.instance.database;
@@ -145,14 +151,29 @@ class DatabaseHelper {
     return result.isNotEmpty;
   }
 
+  Future<bool> checkDiaryEntry(int id) async {
+    // get a reference to the database
+    Database db = await DatabaseHelper.instance.database;
+    // get single row
+    List<Map> result = await db.rawQuery(
+        '''SELECT food_id FROM food_diary WHERE food_id = ? AND date = (SELECT DATE('now'))''',
+        [id]);
+    return result.isNotEmpty;
+  }
+
   Future<List<DiaryEntry>> getDiaryEntries() async {
     Database db = await instance.database;
-    var entries = await db.query('food_diary', orderBy: 'date ASC');
+    var entries = await db.rawQuery('''SELECT * FROM food_diary as f1
+                                      WHERE date = ( SELECT max( f2.date ) FROM food_diary AS f2
+                                                        WHERE f2.food_id = f1.food_id )
+                                      GROUP BY food_id ORDER BY date ASC ''');
     List<DiaryEntry> entryList = entries.isNotEmpty
         ? entries.map((c) => DiaryEntry.fromMap(c)).toList()
         : [];
     return entryList;
-  }Future<List<FridgeEntry>> getFridgeEntries() async {
+  }
+
+  Future<List<FridgeEntry>> getFridgeEntries() async {
     Database db = await instance.database;
     var entries = await db.query('fridge', orderBy: 'mhd DESC');
     List<FridgeEntry> entryList = entries.isNotEmpty
@@ -168,8 +189,16 @@ class DatabaseHelper {
 
   Future<int> addDiaryEntry(DiaryEntry entry) async {
     Database db = await instance.database;
-    return await db.insert('food_diary', entry.toMap());
+    if (await checkDiaryEntry(entry.food_id)) {
+      List<dynamic> dbEntry = await getOneDiaryEntry(entry.food_id);
+      await updateDiaryEntryFromID(dbEntry.first['diary_id'],
+          (dbEntry.first['weight'].toDouble() + entry.weight));
+      return 0;
+    } else {
+      return await db.insert('food_diary', entry.toMap());
+    }
   }
+
   Future<int> addFridgeEntry(FridgeEntry entry) async {
     Database db = await instance.database;
     return await db.insert('fridge', entry.toMap());
@@ -184,10 +213,11 @@ class DatabaseHelper {
     Database db = await instance.database;
     return await db
         .delete('food_diary', where: 'diary_id = ?', whereArgs: [id]);
-  }Future<int> removeFridgeEntry(int id) async {
+  }
+
+  Future<int> removeFridgeEntry(int id) async {
     Database db = await instance.database;
-    return await db
-        .delete('fridge', where: 'fridge_id = ?', whereArgs: [id]);
+    return await db.delete('fridge', where: 'fridge_id = ?', whereArgs: [id]);
   }
 
   Future<int> updateProduct(OwnProduct product) async {
@@ -202,14 +232,38 @@ class DatabaseHelper {
     return await db.update('food_diary', entry.toMap(),
         where: 'diary_id = ?', whereArgs: [entry.diary_id]);
   }
+
+  updateDiaryEntryFromID(int id, double weight) async {
+    Database db = await instance.database;
+    return await db.rawUpdate(
+        '''UPDATE food_diary SET weight = ? WHERE diary_id = ?''',
+        [weight, id]);
+  }
+
   updateFridgeEntry(FridgeEntry entry, DateTime mhd, int amount) async {
-    var formatter =
-    DateFormat('yyyy-MM-dd hh:mm:ss');
+    var formatter = DateFormat('yyyy-MM-dd');
     Database db = await instance.database;
     entry.mhd = formatter.format(mhd);
     entry.amount = amount;
     return await db.update('food_diary', entry.toMap(),
         where: 'diary_id = ?', whereArgs: [entry.fridge_id]);
+  }
+
+  Future<List?> getSummary () async {
+    Database db = await instance.database;
+    print('test');
+
+    var result = await db.rawQuery('''SELECT food_id, sum(weight) as weight FROM food_diary
+	                                WHERE (SELECT DATE('now') - 7 ) < date 
+                                GROUP BY food_id''');
+    return result;
+  }
+
+  Future<String?> getNutriment(String nutriment, int id) async {
+    Database db = await instance.database;
+    List result = db.rawQuery('''SELECT $nutriment FROM food
+                      WHERE food_id = $id''') as List;
+    return result.first[nutriment];
   }
 
   Future<String?> getName(int id) async {
@@ -225,8 +279,9 @@ class DatabaseHelper {
         where: whereString,
         whereArgs: whereArguments);
     String name = result.first['name'];
-    return '$name';
+    return name;
   }
+
   Future<String?> getMarke(int id) async {
     // get a reference to the database
     Database db = await DatabaseHelper.instance.database;
@@ -240,6 +295,8 @@ class DatabaseHelper {
         where: whereString,
         whereArgs: whereArguments);
     String marke = result.first['marke'];
-    return '$marke';
+    return marke;
   }
+
+
 }

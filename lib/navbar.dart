@@ -1,4 +1,5 @@
 import 'package:dieahnungslosen/main.dart';
+import 'package:dieahnungslosen/user_summary.dart';
 import 'package:flutter/material.dart';
 import 'package:dieahnungslosen/fridge.dart';
 import 'package:dieahnungslosen/settings.dart';
@@ -13,6 +14,7 @@ class NavBar extends StatelessWidget {
             Image.asset('images/navbar/food.jpg'),
             site('Ernährungstagebuch', Icons.receipt, FoodDiary()),
             site('Kühlschrank', Icons.door_front_door_rounded, WhatsInMyFridge()),
+            site('Zusammenfassung', Icons.summarize, UserSummary()),
             site('Einstellungen', Icons.settings, Settings()),
           ],
         ));
