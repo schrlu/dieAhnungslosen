@@ -199,6 +199,7 @@ class DatabaseHelper {
     }
   }
 
+
   Future<int> addFridgeEntry(FridgeEntry entry) async {
     Database db = await instance.database;
     return await db.insert('fridge', entry.toMap());
