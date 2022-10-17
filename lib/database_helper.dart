@@ -259,6 +259,8 @@ class DatabaseHelper {
     return result;
   }
 
+
+
   Future<String?> getNutriment(String nutriment, int id) async {
     Database db = await instance.database;
     List result = db.rawQuery('''SELECT $nutriment FROM food
