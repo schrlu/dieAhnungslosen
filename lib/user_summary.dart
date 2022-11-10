@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:dieahnungslosen/navbar.dart';
 import 'package:dieahnungslosen/main.dart';
 import 'package:dieahnungslosen/product_preview.dart';
@@ -12,6 +14,7 @@ import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
 import 'fridge_entry.dart';
+import 'own_product.dart';
 
 class UserSummary extends StatefulWidget {
   const UserSummary({super.key});
@@ -21,44 +24,120 @@ class UserSummary extends StatefulWidget {
 }
 
 class _UserSummaryState extends State<UserSummary> {
+  int cal1Day = 2000;
+  double fat1Day = 65;
+  double carb1Day = 300;
+  double sug1Day = 50;
+  double prot1Day = 67;
+  double salt1Day = 6;
+  late Map summary;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: NavBar(),
-      appBar: AppBar(
-        title: Text('Zusammenfassung'),
-      ),
-      body: ListView(
-          padding: const EdgeInsets.fromLTRB(10.0, 10.0, 10.0, 0.0),
-        children:[
-          Text('Nährwerte letzter 7 Tage', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),),
-          FutureBuilder<List?>(
-              future: DatabaseHelper.instance
-                  .getSummary(),
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  List? summary = snapshot.data;
-                  summary?.forEach((element) {
-                    print(element);
-                  });
+        drawer: NavBar(),
+        appBar: AppBar(
+          title: Text('Zusammenfassung'),
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Spacer(),
+              FutureBuilder<List?>(
+                  future: DatabaseHelper.instance.getSummary(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      summary = {
+                        1: snapshot.data?.first['kalorien'],
+                        2: snapshot.data?.first['fett'],
+                        3: snapshot.data?.first['gesaettigt'],
+                        4: snapshot.data?.first['kohlenhydrate'],
+                        5: snapshot.data?.first['davonZucker'],
+                        6: snapshot.data?.first['eiweiss'],
+                        7: snapshot.data?.first['salz']
+                      };
 
-                  // FutureBuilder<String?>(
-                  //
-                  // )
-                  return Container(
-                    child: Text(
-                        'hallo ${snapshot.data?.first['weight']}',
-                        // textAlign:
-                        // TextAlign.left,
-                        style: TextStyle(
-                            fontSize: 12)),
-                  );
-                } else {
-                  return Text('noname');
-                }
-              })
-        ],
-      )
-    );
+                      summary.forEach((key, value) {
+                        if (value == null) {
+                          summary[key] = 0;
+                        }
+                      });
+                      return Column(
+                          // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Nährwerte letzter 7 Tage',
+                              style: TextStyle(
+                                  fontSize: 20, fontWeight: FontWeight.bold),
+                            ),
+                            Text('Kalorien: ${summary[1]} kcal',
+                                style: TextStyle(fontSize: 18)
+                            ),
+                            Text('Fett: ${summary[2].toStringAsFixed(1)} g',
+                                style: TextStyle(fontSize: 18)),
+                            Text('davon gesättigte Fettsäuren: ${summary[3].toStringAsFixed(1)} g',
+                                style: TextStyle(fontSize: 18)),
+                            Text('Kohlenhydrate: ${summary[4].toStringAsFixed(1)} g',
+                                style: TextStyle(fontSize: 18)),
+                            Text('davon Zucker: ${summary[5].toStringAsFixed(1)} g',
+                                style: TextStyle(fontSize: 18)),
+                            Text('Eiweiß: ${summary[6].toStringAsFixed(1)} g',
+                                style: TextStyle(fontSize: 18)),
+                            Text('Salz: ${summary[7].toStringAsFixed(1)} g',
+                                style: TextStyle(fontSize: 18)),
+                          ]);
+                    } else {
+                      return Text('noname');
+                    }
+                  }),
+              Spacer(),
+              FutureBuilder<int?>(
+                  future: DatabaseHelper.instance.getMaxDateDiff(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      int dateDiff = snapshot.data!.toInt();
+                      if (dateDiff > 7) {
+                        dateDiff = 7;
+                        print(dateDiff);
+                      } else {
+                        dateDiff++;
+                      }
+
+                      return Column(
+                          // mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Nährwert Sollvergleich',
+                              style: TextStyle(
+                                  fontSize: 20, fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                                'Kalorien: ${(cal1Day * dateDiff) - summary[1]} kcal',
+                                style: TextStyle(fontSize: 18)),
+                            Text('Fett: ${((fat1Day * dateDiff) - summary[2]).toStringAsFixed(1)} g',
+                                style: TextStyle(fontSize: 18)),
+                            Text(
+                                'Kohlenhydrate: ${((carb1Day * dateDiff) - summary[4]).toStringAsFixed(1)} g',
+                                style: TextStyle(fontSize: 18)),
+                            Text('Zucker: ${((sug1Day * dateDiff) - summary[5]).toStringAsFixed(1)} g',
+                                style: TextStyle(fontSize: 18)),
+                            Text(
+                                'Eiweiß: ${((prot1Day * dateDiff) - summary[6]).toStringAsFixed(1)} g',
+                                style: TextStyle(fontSize: 18)),
+                            Text('Salz: ${((salt1Day * dateDiff) - summary[7]).toStringAsFixed(1)} g',
+                                style: TextStyle(fontSize: 18)),
+                          ]);
+                    } else {
+                      return Text('Bisher keine Ernährung aufgezeichnet');
+                    }
+                  }),
+              Spacer(flex: 10,),
+            ],
+          ),
+        ));
   }
 }

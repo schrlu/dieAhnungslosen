@@ -8,9 +8,14 @@ import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
 
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MaterialApp(home: FoodDiary()));
+  runApp(MaterialApp(home: FoodDiary(),
+    debugShowCheckedModeBanner: false,
+    theme: ThemeData.light(),
+    darkTheme: ThemeData.dark(),
+    ));
 }
 
 class FoodDiary extends StatefulWidget {
@@ -21,12 +26,15 @@ class FoodDiary extends StatefulWidget {
 }
 
 class FoodDiaryState extends State<FoodDiary> {
+
+
   String _barcode = "";
   var formatter = DateFormat('dd.MM.yyyy');
   TextEditingController mengeController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
         drawer: NavBar(),
         appBar: AppBar(

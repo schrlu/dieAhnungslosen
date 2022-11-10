@@ -54,6 +54,15 @@ class DatabaseHelper {
       FOREIGN KEY (food_id) REFERENCES food (food_id)
       )
     ''');
+
+    await db.execute('''CREATE TABLE settings(
+    settings_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    gender INTEGER
+    )''');
+
+    await db.execute('''INSERT INTO settings (gender)
+    VALUES(1)''');
+
     await db.execute('''
     CREATE TABLE fridge(
       fridge_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -98,7 +107,6 @@ class DatabaseHelper {
         columns: columnsToSelect,
         where: whereString,
         whereArgs: whereArguments);
-    print(result);
     return result;
   }
 
@@ -134,6 +142,14 @@ class DatabaseHelper {
     // get single row
     List<Map> result = await db.rawQuery(
         '''SELECT diary_id, weight, date, food_id FROM food_diary WHERE food_id = $id AND date = (SELECT DATE('now')) ''');
+    return result;
+  }
+
+  Future<List> getSettings() async {
+    Database db = await DatabaseHelper.instance.database;
+    // get single row
+    List<Map> result = await db
+        .rawQuery('''SELECT gender FROM settings WHERE settings_id = 1''');
     return result;
   }
 
@@ -199,7 +215,6 @@ class DatabaseHelper {
     }
   }
 
-
   Future<int> addFridgeEntry(FridgeEntry entry) async {
     Database db = await instance.database;
     return await db.insert('fridge', entry.toMap());
@@ -241,6 +256,12 @@ class DatabaseHelper {
         [weight, id]);
   }
 
+  updateSettings(String type, int value) async {
+    Database db = await instance.database;
+    return await db.rawUpdate(
+        '''UPDATE settings SET $type = ? WHERE settings_id = 1''', [value]);
+  }
+
   updateFridgeEntry(FridgeEntry entry, DateTime mhd, int amount) async {
     var formatter = DateFormat('yyyy-MM-dd');
     Database db = await instance.database;
@@ -250,22 +271,27 @@ class DatabaseHelper {
         where: 'diary_id = ?', whereArgs: [entry.fridge_id]);
   }
 
-  Future<List?> getSummary () async {
+  Future<List?> getSummary() async {
     Database db = await instance.database;
-    print('test');
-
-    var result = await db.rawQuery('''SELECT food_id, sum(weight) as weight FROM food_diary
-	                                WHERE (SELECT DATE('now') - 7 ) < date 
-                                GROUP BY food_id''');
+    String sqlString = '''SELECT sum(fd.weight*f.kalorien/100) as kalorien,
+     sum(fd.weight*f.fett/100) as fett, 
+     sum(fd.weight*f.gesaettigt/100) as gesaettigt, 
+     sum(fd.weight*f.kohlenhydrate/100) as kohlenhydrate,
+     sum(fd.weight*f.davonZucker/100) as davonZucker,
+     sum(fd.weight*f.eiweiss/100) as eiweiss,
+     sum(fd.weight*f.salz/100) as salz
+     FROM food AS f
+     JOIN food_diary AS fd ON
+     f.food_id = fd.food_id
+     WHERE (JulianDay('now') - 7) < JulianDay(fd.date)''';
+    var result = await db.rawQuery(sqlString);
     return result;
   }
 
-
-
   Future<String?> getNutriment(String nutriment, int id) async {
     Database db = await instance.database;
-    List result = db.rawQuery('''SELECT $nutriment FROM food
-                      WHERE food_id = $id''') as List;
+    List result = await db.rawQuery('''SELECT $nutriment FROM food
+                      WHERE food_id = $id''');
     return result.first[nutriment];
   }
 
@@ -301,5 +327,14 @@ class DatabaseHelper {
     return marke;
   }
 
-
+  Future<int?> getMaxDateDiff() async {
+    Database db = await DatabaseHelper.instance.database;
+    List result = await db.rawQuery('''Select Cast ((
+    JulianDay('now') - JulianDay(min(date))
+) As Integer) as diff FROM food_diary''');
+    if (result.isNotEmpty) {
+      return result.first['diff'];
+    }
+    return 0;
+  }
 }

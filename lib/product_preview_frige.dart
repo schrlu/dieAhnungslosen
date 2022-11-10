@@ -60,8 +60,8 @@ class _ProductPreviewFridgeState extends State<ProductPreviewFridge> {
                           onPressed: () async {
                             mhd = await showDatePicker(context: context,
                                 initialDate: DateTime.now(),
-                                firstDate: DateTime(2022),
-                                lastDate: DateTime(2099, 12, 31));
+                                firstDate: DateTime(0000),
+                                lastDate: DateTime(9999, 12, 31));
                           },),
                         ListTile(
                           title: Text('Anzahl: '),

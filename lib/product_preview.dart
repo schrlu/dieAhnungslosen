@@ -25,6 +25,11 @@ class ProductPreview extends StatefulWidget {
 class _ProductPreviewState extends State<ProductPreview> {
   OwnProduct? prod;
   int _groupValue = 1;
+  DateFormat formatter = DateFormat('dd.MM.yyyy');
+  DateTime start = DateTime(0000,1,1);
+  DateTime end = DateTime(9999,12,31);
+  DateTime now = DateTime.now();
+
 
   @override
   Widget build(BuildContext context) {
@@ -158,7 +163,7 @@ class _ProductPreviewState extends State<ProductPreview> {
           kohlenhydrate: jsonEncode(result.product?.nutriments?.carbohydrates),
           davonZucker: jsonEncode(result.product?.nutriments?.sugars),
           eiweiss: jsonEncode(result.product?.nutriments?.proteins),
-          salz: jsonEncode(result.product?.nutriments?.sodium));
+          salz: jsonEncode(result.product?.nutriments?.salt));
       DatabaseHelper.instance.addProduct(productApi);
       return productApi;
     } else {
