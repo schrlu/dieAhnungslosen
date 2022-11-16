@@ -68,7 +68,7 @@ class DatabaseHelper {
       fridge_id INTEGER PRIMARY KEY AUTOINCREMENT,
       amount INTEGER,
       food_id INTEGER,
-      mhd STRING,
+      mhd DATE,
       FOREIGN KEY (food_id) REFERENCES food (food_id)
       )
     ''');

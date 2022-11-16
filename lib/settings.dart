@@ -51,7 +51,8 @@ class _SettingsState extends State<Settings> {
                                                 DatabaseHelper.instance
                                                     .updateSettings(
                                                         'gender', 1);
-                                                reloadPage(context, Settings());
+                                                setState(() {});
+                                                Navigator.pop(context);
                                               },
                                               child: const Text(
                                                 'weiblich',
@@ -62,7 +63,8 @@ class _SettingsState extends State<Settings> {
                                                 DatabaseHelper.instance
                                                     .updateSettings(
                                                         'gender', 2);
-                                                reloadPage(context, Settings());
+                                                setState(() {});
+                                                Navigator.pop(context);
                                               },
                                               child: const Text(
                                                 'männlich',
@@ -73,10 +75,11 @@ class _SettingsState extends State<Settings> {
                                                 DatabaseHelper.instance
                                                     .updateSettings(
                                                         'gender', 3);
-                                                reloadPage(context, Settings());
+                                                setState(() {});
+                                                Navigator.pop(context);
                                               },
                                               child: Text(
-                                                'sonstiges', style: TextStyle(color: Colors.grey),),
+                                                'sonstiges', style: TextStyle(color: Theme.of(context).colorScheme.onSurface),),
                                               ),
                                         ]),
                                   ));

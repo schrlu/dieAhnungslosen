@@ -89,7 +89,8 @@ class FoodDiaryState extends State<FoodDiary> {
                                           await DatabaseHelper.instance
                                               .removeDiaryEntry(
                                                   entry.diary_id!);
-                                          reloadPage(context, FoodDiary());
+                                          setState(() {});
+                                          // reloadPage(context, FoodDiary());
                                         },
                                       )
                                     ],
@@ -277,7 +278,9 @@ class FoodDiaryState extends State<FoodDiary> {
                       onPressed: () => {
                             DatabaseHelper.instance.updateDiaryEntry(
                                 entry, double.parse(mengeController.text)),
-                            reloadPage(context, FoodDiary())
+                      setState(() {}),
+                      Navigator.pushAndRemoveUntil(context,
+                      MaterialPageRoute(builder: (context) => FoodDiary()), (route) => false),
                           },
                       child: Text('Submit')),
                 ],

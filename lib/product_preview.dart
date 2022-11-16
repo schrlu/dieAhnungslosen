@@ -25,11 +25,11 @@ class ProductPreview extends StatefulWidget {
 class _ProductPreviewState extends State<ProductPreview> {
   OwnProduct? prod;
   int _groupValue = 1;
-  DateFormat formatter = DateFormat('dd.MM.yyyy');
-  DateTime start = DateTime(0000,1,1);
-  DateTime end = DateTime(9999,12,31);
-  DateTime now = DateTime.now();
-
+  DateFormat ymd = DateFormat('yyyy-MM-dd');
+  DateFormat dmy = DateFormat('dd.MM.yyyy');
+  DateTime start = DateTime(0000, 1, 1);
+  DateTime end = DateTime(9999, 12, 31);
+  DateTime date = DateTime.now();
 
   @override
   Widget build(BuildContext context) {
@@ -51,9 +51,25 @@ class _ProductPreviewState extends State<ProductPreview> {
                     var marke = snapshot.data!.first['marke'];
                     foodId = snapshot.data!.first['food_id'];
                     return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        buildTextFormFieldDisabled('Produktname', name),
-                        buildTextFormFieldDisabled('Produktmarke', marke),
+                        buildTextFormFieldDisabled('Produktname:', name),
+                        buildTextFormFieldDisabled('Produktmarke:', marke),
+                        TextButton(
+                          onPressed: () async {
+                            date = (await showDatePicker(
+                                context: context,
+                                initialDate: DateTime.now(),
+                                firstDate: DateTime(0000),
+                                lastDate: DateTime(9999, 12, 31)))!;
+                            setState(() {});
+                          },
+                          child: Padding(
+                            padding: EdgeInsets.only(left: 12),
+                            child: Text('Datum: ${dmy.format(date)}',
+                                style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 16, fontWeight: FontWeight.normal),),
+                          ),
+                        ),
                         ListTile(
                           title: Text('Menge in g/ml'),
                         ),
@@ -75,16 +91,14 @@ class _ProductPreviewState extends State<ProductPreview> {
                         ),
                         IconButton(
                           onPressed: () async {
-                            var formatter =
-                                DateFormat('yyyy-MM-dd');
                             DiaryEntry entry = DiaryEntry(
                               weight: getWeight(
                                   snapshot.data!.first['menge_ml'],
                                   mengeController.text),
-                              date: formatter.format(DateTime.now()).toString(),
+                              date: ymd.format(date).toString(),
                               food_id: foodId,
                             );
-                           await DatabaseHelper.instance.addDiaryEntry(entry);
+                            await DatabaseHelper.instance.addDiaryEntry(entry);
                             Navigator.pushAndRemoveUntil(
                                 context,
                                 MaterialPageRoute(

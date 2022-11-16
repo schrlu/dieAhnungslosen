@@ -69,8 +69,8 @@ class _ProductPreviewFridgeState extends State<ProductPreviewFridge> {
                         buildTextFormField('Anzahl', anzahlController),
                         IconButton(
                           onPressed: () async {
-                            var formatter =
-                                DateFormat('yyyy-MM-dd hh:mm:ss');
+                            // var formatter =
+                            //     DateFormat('yyyy-MM-dd hh:mm:ss');
                             FridgeEntry entry = FridgeEntry(
                               amount: int.parse(anzahlController.text),
                               mhd: formatter.format(mhd).toString(),
