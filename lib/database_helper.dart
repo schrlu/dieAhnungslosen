@@ -289,6 +289,8 @@ class DatabaseHelper {
     return result;
   }
   Future<List?> getSummaryCurrentDay() async {
+    DateFormat ymd = DateFormat('yyyy-MM-dd');
+    print(ymd.format(DateTime.now()));
     Database db = await instance.database;
     String sqlString = '''SELECT sum(fd.weight*f.kalorien/100) as kalorien,
      sum(fd.weight*f.fett/100) as fett, 
@@ -300,7 +302,7 @@ class DatabaseHelper {
      FROM food AS f
      JOIN food_diary AS fd ON
      f.food_id = fd.food_id
-     WHERE JulianDay('now') > JulianDay(fd.date)''';
+     WHERE '${ymd.format(DateTime.now())}' LIKE fd.date''';
     var result = await db.rawQuery(sqlString);
     return result;
   }

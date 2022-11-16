@@ -181,7 +181,7 @@ class _UserSummaryState extends State<UserSummary> {
                                     CrossAxisAlignment.start,
                                     children: [
                                       const Text(
-                                        'Nährwerte letzter 7 Tage',
+                                        'Nährwerte des aktuellen Tages',
                                         style: TextStyle(
                                             fontSize: 20,
                                             fontWeight: FontWeight.bold),
@@ -212,7 +212,6 @@ class _UserSummaryState extends State<UserSummary> {
                               }
                             }),
                         Spacer(
-                          flex: 10,
                         ),
                       ],
                     );
