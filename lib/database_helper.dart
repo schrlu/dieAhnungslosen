@@ -137,11 +137,11 @@ class DatabaseHelper {
     return result;
   }
 
-  Future<List> getOneDiaryEntry(int id) async {
+  Future<List> getOneDiaryEntry(int id, String date) async {
     Database db = await DatabaseHelper.instance.database;
     // get single row
     List<Map> result = await db.rawQuery(
-        '''SELECT diary_id, weight, date, food_id FROM food_diary WHERE food_id = $id AND date = (SELECT DATE('now')) ''');
+        '''SELECT diary_id, weight, date, food_id FROM food_diary WHERE food_id = $id AND date = '$date' ''');
     return result;
   }
 
@@ -167,12 +167,12 @@ class DatabaseHelper {
     return result.isNotEmpty;
   }
 
-  Future<bool> checkDiaryEntry(int id) async {
+  Future<bool> checkDiaryEntry(int id, String date) async {
     // get a reference to the database
     Database db = await DatabaseHelper.instance.database;
     // get single row
     List<Map> result = await db.rawQuery(
-        '''SELECT food_id FROM food_diary WHERE food_id = ? AND date = (SELECT DATE('now'))''',
+        '''SELECT food_id FROM food_diary WHERE food_id = ? AND date = '$date' ''',
         [id]);
     return result.isNotEmpty;
   }
@@ -188,6 +188,7 @@ class DatabaseHelper {
         : [];
     return entryList;
   }
+
 
   Future<List<FridgeEntry>> getFridgeEntries() async {
     Database db = await instance.database;
@@ -205,8 +206,8 @@ class DatabaseHelper {
 
   Future<int> addDiaryEntry(DiaryEntry entry) async {
     Database db = await instance.database;
-    if (await checkDiaryEntry(entry.food_id)) {
-      List<dynamic> dbEntry = await getOneDiaryEntry(entry.food_id);
+    if (await checkDiaryEntry(entry.food_id, entry.date)) {
+      List<dynamic> dbEntry = await getOneDiaryEntry(entry.food_id, entry.date);
       await updateDiaryEntryFromID(dbEntry.first['diary_id'],
           (dbEntry.first['weight'].toDouble() + entry.weight));
       return 0;
@@ -284,6 +285,22 @@ class DatabaseHelper {
      JOIN food_diary AS fd ON
      f.food_id = fd.food_id
      WHERE (JulianDay('now') - 7) < JulianDay(fd.date)''';
+    var result = await db.rawQuery(sqlString);
+    return result;
+  }
+  Future<List?> getSummaryCurrentDay() async {
+    Database db = await instance.database;
+    String sqlString = '''SELECT sum(fd.weight*f.kalorien/100) as kalorien,
+     sum(fd.weight*f.fett/100) as fett, 
+     sum(fd.weight*f.gesaettigt/100) as gesaettigt, 
+     sum(fd.weight*f.kohlenhydrate/100) as kohlenhydrate,
+     sum(fd.weight*f.davonZucker/100) as davonZucker,
+     sum(fd.weight*f.eiweiss/100) as eiweiss,
+     sum(fd.weight*f.salz/100) as salz
+     FROM food AS f
+     JOIN food_diary AS fd ON
+     f.food_id = fd.food_id
+     WHERE JulianDay('now') > JulianDay(fd.date)''';
     var result = await db.rawQuery(sqlString);
     return result;
   }

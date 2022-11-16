@@ -62,6 +62,7 @@ class _ProductPreviewState extends State<ProductPreview> {
                                 initialDate: DateTime.now(),
                                 firstDate: DateTime(0000),
                                 lastDate: DateTime(9999, 12, 31)))!;
+                            print('in TextButton $date');
                             setState(() {});
                           },
                           child: Padding(
@@ -91,11 +92,13 @@ class _ProductPreviewState extends State<ProductPreview> {
                         ),
                         IconButton(
                           onPressed: () async {
+                            print('in confirm $date');
+                            String formattedDate = ymd.format(date);
                             DiaryEntry entry = DiaryEntry(
                               weight: getWeight(
                                   snapshot.data!.first['menge_ml'],
                                   mengeController.text),
-                              date: ymd.format(date).toString(),
+                              date: formattedDate,
                               food_id: foodId,
                             );
                             await DatabaseHelper.instance.addDiaryEntry(entry);

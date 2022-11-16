@@ -49,11 +49,13 @@ class FoodDiaryState extends State<FoodDiary> {
                   child: Text('Loading...'),
                 );
               }
+
               return snapshot.data!.isEmpty
                   ? Center(
                       child: Text('Keine Einträge vorhanden'),
                     )
-                  : ListView(
+                  :
+              ListView(
                       children: snapshot.data!.map((entry) {
                         return Padding(
                           padding: const EdgeInsets.fromLTRB(

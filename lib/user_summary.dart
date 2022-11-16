@@ -77,33 +77,32 @@ class _UserSummaryState extends State<UserSummary> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Text('$gender'),
-                                      Text(
+                                      const Text(
                                         'Nährwerte letzter 7 Tage',
                                         style: TextStyle(
                                             fontSize: 20,
                                             fontWeight: FontWeight.bold),
                                       ),
                                       Text('Kalorien: ${summary[1]} kcal',
-                                          style: TextStyle(fontSize: 18)),
+                                          style: const TextStyle(fontSize: 18)),
                                       Text(
                                           'Fett: ${summary[2].toStringAsFixed(1)} g',
-                                          style: TextStyle(fontSize: 18)),
+                                          style: const TextStyle(fontSize: 18)),
                                       Text(
                                           'davon gesättigte Fettsäuren: ${summary[3].toStringAsFixed(1)} g',
-                                          style: TextStyle(fontSize: 18)),
+                                          style: const TextStyle(fontSize: 18)),
                                       Text(
                                           'Kohlenhydrate: ${summary[4].toStringAsFixed(1)} g',
-                                          style: TextStyle(fontSize: 18)),
+                                          style: const TextStyle(fontSize: 18)),
                                       Text(
                                           'davon Zucker: ${summary[5].toStringAsFixed(1)} g',
-                                          style: TextStyle(fontSize: 18)),
+                                          style: const TextStyle(fontSize: 18)),
                                       Text(
                                           'Eiweiß: ${summary[6].toStringAsFixed(1)} g',
-                                          style: TextStyle(fontSize: 18)),
+                                          style: const TextStyle(fontSize: 18)),
                                       Text(
                                           'Salz: ${summary[7].toStringAsFixed(1)} g',
-                                          style: TextStyle(fontSize: 18)),
+                                          style: const TextStyle(fontSize: 18)),
                                     ]);
                               } else {
                                 return Text('noname');
@@ -126,7 +125,7 @@ class _UserSummaryState extends State<UserSummary> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Text(
+                                      const Text(
                                         'Nährwert Sollvergleich',
                                         style: TextStyle(
                                             fontSize: 20,
@@ -154,6 +153,62 @@ class _UserSummaryState extends State<UserSummary> {
                               } else {
                                 return Text(
                                     'Bisher keine Ernährung aufgezeichnet');
+                              }
+                            }),
+                        Spacer(),
+                        FutureBuilder<List?>(
+                            future: DatabaseHelper.instance.getSummaryCurrentDay(),
+                            builder: (context, snapshot) {
+                              if (snapshot.hasData) {
+                                summary = {
+                                  1: snapshot.data?.first['kalorien'],
+                                  2: snapshot.data?.first['fett'],
+                                  3: snapshot.data?.first['gesaettigt'],
+                                  4: snapshot.data?.first['kohlenhydrate'],
+                                  5: snapshot.data?.first['davonZucker'],
+                                  6: snapshot.data?.first['eiweiss'],
+                                  7: snapshot.data?.first['salz']
+                                };
+
+                                summary.forEach((key, value) {
+                                  if (value == null) {
+                                    summary[key] = 0;
+                                  }
+                                });
+                                return Column(
+                                  // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    crossAxisAlignment:
+                                    CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Nährwerte letzter 7 Tage',
+                                        style: TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                      Text('Kalorien: ${summary[1]} kcal',
+                                          style: const TextStyle(fontSize: 18)),
+                                      Text(
+                                          'Fett: ${summary[2].toStringAsFixed(1)} g',
+                                          style: const TextStyle(fontSize: 18)),
+                                      Text(
+                                          'davon gesättigte Fettsäuren: ${summary[3].toStringAsFixed(1)} g',
+                                          style: const TextStyle(fontSize: 18)),
+                                      Text(
+                                          'Kohlenhydrate: ${summary[4].toStringAsFixed(1)} g',
+                                          style: const TextStyle(fontSize: 18)),
+                                      Text(
+                                          'davon Zucker: ${summary[5].toStringAsFixed(1)} g',
+                                          style: const TextStyle(fontSize: 18)),
+                                      Text(
+                                          'Eiweiß: ${summary[6].toStringAsFixed(1)} g',
+                                          style: const TextStyle(fontSize: 18)),
+                                      Text(
+                                          'Salz: ${summary[7].toStringAsFixed(1)} g',
+                                          style: const TextStyle(fontSize: 18)),
+                                    ]);
+                              } else {
+                                return Text('noname');
                               }
                             }),
                         Spacer(
