@@ -3,7 +3,7 @@
     <uses-feature android:name="android.feature.camera"></uses-feature>
     <uses-permission android:name="android.permission.CAMERA"></uses-permission>
    <application
-        android:label="dieahnungslosen"
+        android:label="Health Tracker"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

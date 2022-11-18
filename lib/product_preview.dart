@@ -5,6 +5,7 @@ import 'package:dieahnungslosen/diary_entry.dart';
 import 'package:dieahnungslosen/main.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:openfoodfacts/openfoodfacts.dart';
 import 'package:openfoodfacts/utils/LanguageHelper.dart';
 import 'package:openfoodfacts/utils/ProductFields.dart';
@@ -23,6 +24,7 @@ class ProductPreview extends StatefulWidget {
 }
 
 class _ProductPreviewState extends State<ProductPreview> {
+  late String _barcode;
   OwnProduct? prod;
   int _groupValue = 1;
   DateFormat ymd = DateFormat('yyyy-MM-dd');
@@ -62,7 +64,6 @@ class _ProductPreviewState extends State<ProductPreview> {
                                 initialDate: DateTime.now(),
                                 firstDate: DateTime(0000),
                                 lastDate: DateTime(9999, 12, 31)))!;
-                            print('in TextButton $date');
                             setState(() {});
                           },
                           child: Padding(
@@ -92,7 +93,6 @@ class _ProductPreviewState extends State<ProductPreview> {
                         ),
                         IconButton(
                           onPressed: () async {
-                            print('in confirm $date');
                             String formattedDate = ymd.format(date);
                             DiaryEntry entry = DiaryEntry(
                               weight: getWeight(
@@ -113,7 +113,26 @@ class _ProductPreviewState extends State<ProductPreview> {
                       ],
                     );
                   } else {
-                    return Text('Lädt...');
+                    return Container(
+                      child: Column(
+                        children: [
+                          Text('Scan fehlgeschlagen'),
+                          TextButton(onPressed: () async {
+                            await scan();
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ProductPreview(_barcode),
+                                ));
+                          }, child: Text('erneut versuchen')),
+                          Text(''),
+                          TextButton(onPressed: (){
+                            Navigator.pushAndRemoveUntil(context,
+                                MaterialPageRoute(builder: (context) => FoodDiary()), (route) => false);
+                          }, child: Text('abbrechen')),
+                        ],
+                      ),
+                    );
                   }
                 }),
           ),
@@ -193,5 +212,10 @@ class _ProductPreviewState extends State<ProductPreview> {
         language: OpenFoodFactsLanguage.GERMAN, fields: [ProductField.ALL]);
     ProductResult result = await OpenFoodAPIClient.getProduct(configuration);
     return result;
+  }
+  scan() async {
+    return await FlutterBarcodeScanner.scanBarcode(
+        "#000000", 'Abbrechen', true, ScanMode.BARCODE)
+        .then((value) => setState(() => _barcode = value));
   }
 }

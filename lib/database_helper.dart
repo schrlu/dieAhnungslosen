@@ -145,6 +145,14 @@ class DatabaseHelper {
     return result;
   }
 
+  Future<List> getOneFridgeEntry(int id, String mhd) async {
+    Database db = await DatabaseHelper.instance.database;
+    // get single row
+    List<Map> result = await db.rawQuery(
+        '''SELECT fridge_id, amount, mhd, food_id FROM fridge WHERE food_id = $id AND mhd = '$mhd' ''');
+    return result;
+  }
+
   Future<List> getSettings() async {
     Database db = await DatabaseHelper.instance.database;
     // get single row
@@ -177,6 +185,26 @@ class DatabaseHelper {
     return result.isNotEmpty;
   }
 
+  Future<bool> checkFridgeEntry(int id, String mhd) async {
+    // get a reference to the database
+    Database db = await DatabaseHelper.instance.database;
+    // get single row
+    List<Map> result = await db.rawQuery(
+        '''SELECT fridge_id FROM fridge WHERE food_id = ? AND mhd = '$mhd' ''',
+        [id]);
+    return result.isNotEmpty;
+  }
+
+  Future<bool> checkFridgeEntryUpdate(int id, String mhd, int idNot) async {
+    // get a reference to the database
+    Database db = await DatabaseHelper.instance.database;
+    // get single row
+    List<Map> result = await db.rawQuery(
+        '''SELECT fridge_id FROM fridge WHERE food_id = ? AND mhd = '$mhd' AND NOT fridge_id = $idNot''',
+        [id]);
+    return result.isNotEmpty;
+  }
+
   Future<List<DiaryEntry>> getDiaryEntries() async {
     Database db = await instance.database;
     var entries = await db.rawQuery('''SELECT * FROM food_diary as f1
@@ -189,10 +217,9 @@ class DatabaseHelper {
     return entryList;
   }
 
-
   Future<List<FridgeEntry>> getFridgeEntries() async {
     Database db = await instance.database;
-    var entries = await db.query('fridge', orderBy: 'mhd DESC');
+    var entries = await db.query('fridge', orderBy: 'mhd ASC');
     List<FridgeEntry> entryList = entries.isNotEmpty
         ? entries.map((c) => FridgeEntry.fromMap(c)).toList()
         : [];
@@ -218,8 +245,20 @@ class DatabaseHelper {
 
   Future<int> addFridgeEntry(FridgeEntry entry) async {
     Database db = await instance.database;
-    return await db.insert('fridge', entry.toMap());
+    if (await checkFridgeEntry(entry.food_id, entry.mhd)) {
+      List<dynamic> dbEntry = await getOneFridgeEntry(entry.food_id, entry.mhd);
+      await updateFridgeEntryFromID(dbEntry.first['fridge_id'],
+          (dbEntry.first['amount'].toDouble() + entry.amount));
+      return 0;
+    } else {
+      return await db.insert('fridge', entry.toMap());
+    }
   }
+
+  // Future<int> addFridgeEntry(FridgeEntry entry) async {
+  //   Database db = await instance.database;
+  //   return await db.insert('fridge', entry.toMap());
+  // }
 
   Future<int> removeProduct(int id) async {
     Database db = await instance.database;
@@ -257,6 +296,12 @@ class DatabaseHelper {
         [weight, id]);
   }
 
+  updateFridgeEntryFromID(int id, double amount) async {
+    Database db = await instance.database;
+    return await db.rawUpdate(
+        '''UPDATE fridge SET amount = ? WHERE fridge_id = ?''', [amount, id]);
+  }
+
   updateSettings(String type, int value) async {
     Database db = await instance.database;
     return await db.rawUpdate(
@@ -268,8 +313,23 @@ class DatabaseHelper {
     Database db = await instance.database;
     entry.mhd = formatter.format(mhd);
     entry.amount = amount;
-    return await db.update('food_diary', entry.toMap(),
-        where: 'diary_id = ?', whereArgs: [entry.fridge_id]);
+
+    if (await checkFridgeEntryUpdate(entry.food_id, entry.mhd, entry.fridge_id!)) {
+      List<Map> result = await db.rawQuery(
+          '''SELECT fridge_id, amount FROM fridge WHERE food_id = ? AND mhd = '${entry.mhd}' ''',
+          [entry.food_id]);
+      print('test');
+      print(jsonDecode(jsonEncode(result.first)));
+      await db.rawUpdate(
+          ''' UPDATE fridge SET amount = ${result.first['amount'] + entry.amount} where fridge_id = ${result.first['fridge_id']}''');
+      await db.rawDelete(
+          ''' DELETE FROM fridge WHERE fridge_id = ${entry.fridge_id}''');
+      return 0;
+    } else {
+      print('test123');
+      return await db.update('fridge', entry.toMap(),
+          where: 'fridge_id = ?', whereArgs: [entry.fridge_id]);
+    }
   }
 
   Future<List?> getSummary() async {
@@ -288,9 +348,9 @@ class DatabaseHelper {
     var result = await db.rawQuery(sqlString);
     return result;
   }
+
   Future<List?> getSummaryCurrentDay() async {
     DateFormat ymd = DateFormat('yyyy-MM-dd');
-    print(ymd.format(DateTime.now()));
     Database db = await instance.database;
     String sqlString = '''SELECT sum(fd.weight*f.kalorien/100) as kalorien,
      sum(fd.weight*f.fett/100) as fett, 

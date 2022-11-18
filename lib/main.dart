@@ -64,9 +64,9 @@ class FoodDiaryState extends State<FoodDiary> {
                               decoration: BoxDecoration(
                                   border: Border(
                                 bottom: BorderSide(
-                                    width: 1.0, color: Colors.grey),
+                                    width: 0.2, color: Colors.grey),
                                 top: BorderSide(
-                                    width: 1.0, color: Colors.grey),
+                                    width: 0.2, color: Colors.grey),
                               )),
                               child: InkWell(
                                 onTap: () {
@@ -181,33 +181,6 @@ class FoodDiaryState extends State<FoodDiary> {
         floatingActionButton: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            // FloatingActionButton(
-            //   heroTag: 'Manual-Button',
-            //   onPressed: () => showDialog(
-            //       context: context,
-            //       builder: (context) => AlertDialog(
-            //             title: const Text('Manueller Eintrag'),
-            //             content: Column(
-            //               mainAxisSize: MainAxisSize.min,
-            //               children: <Widget>[
-            //                 eingabefeld('Bezeichnung', 'Name'),
-            //                 eingabefeld('Menge in Gramm', 'Menge'),
-            //                 eingabefeld('bla bla', 'bla bla'),
-            //                 TextButton(
-            //                     onPressed: () => {
-            //                           showDialog(
-            //                               context: context,
-            //                               builder: (context) =>
-            //                                   successWindow(FoodDiary()))
-            //                         },
-            //                     child: Text('Submit')),
-            //               ],
-            //             ),
-            //           )),
-            //
-            //   tooltip: 'Increment',
-            //   child: const Icon(Icons.add),
-            // ),
             Padding(
                 padding: EdgeInsets.only(top: 15),
                 child: FloatingActionButton(
@@ -281,8 +254,7 @@ class FoodDiaryState extends State<FoodDiary> {
                             DatabaseHelper.instance.updateDiaryEntry(
                                 entry, double.parse(mengeController.text)),
                       setState(() {}),
-                      Navigator.pushAndRemoveUntil(context,
-                      MaterialPageRoute(builder: (context) => FoodDiary()), (route) => false),
+                      Navigator.pop(context),
                           },
                       child: Text('Submit')),
                 ],

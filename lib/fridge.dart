@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dieahnungslosen/navbar.dart';
 import 'package:dieahnungslosen/product_preview_frige.dart';
 import 'package:flutter/material.dart';
@@ -19,7 +21,6 @@ class WhatsInMyFridge extends StatefulWidget {
 class _WhatsInMyFridgeState extends State<WhatsInMyFridge> {
   TextEditingController anzahlController = TextEditingController();
   String _barcode = "";
-  DateTime? mhd;
   var formatter = DateFormat('dd.MM.yyyy');
 
   @override
@@ -51,8 +52,8 @@ class _WhatsInMyFridgeState extends State<WhatsInMyFridge> {
                               decoration: const BoxDecoration(
                                   border: Border(
                                 bottom:
-                                    BorderSide(width: 1.0, color: Colors.grey),
-                                top: BorderSide(width: 1.0, color: Colors.grey),
+                                    BorderSide(width: 0.2, color: Colors.grey),
+                                top: BorderSide(width: 0.2, color: Colors.grey),
                               )),
                               child: InkWell(
                                 onTap: () {
@@ -77,8 +78,7 @@ class _WhatsInMyFridgeState extends State<WhatsInMyFridge> {
                                           await DatabaseHelper.instance
                                               .removeFridgeEntry(
                                                   entry.fridge_id!);
-                                          reloadPage(
-                                              context, WhatsInMyFridge());
+                                          setState(() {});
                                         },
                                       )
                                     ],
@@ -162,6 +162,14 @@ class _WhatsInMyFridgeState extends State<WhatsInMyFridge> {
             Padding(
                 padding: EdgeInsets.only(top: 15),
                 child: FloatingActionButton(
+                    heroTag: 'reload Button',
+                    onPressed: () async {
+                      setState(() {});
+                    },
+                    child: Icon(Icons.refresh))),
+            Padding(
+                padding: EdgeInsets.only(top: 15),
+                child: FloatingActionButton(
                     heroTag: 'Scan-Button',
                     onPressed: () async {
                       await scan();
@@ -201,6 +209,9 @@ class _WhatsInMyFridgeState extends State<WhatsInMyFridge> {
   }
 
   editProduct(FridgeEntry entry) {
+    DateTime mhd = DateTime.parse(entry.mhd);
+    DateFormat ymd = DateFormat('yyyy-MM-dd');
+    DateFormat dmy = DateFormat('dd.MM.yyyy');
     return showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -210,44 +221,50 @@ class _WhatsInMyFridgeState extends State<WhatsInMyFridge> {
                     if (snapshot.hasData) {
                       return Container(
                         child: Text(snapshot.data!,
-                            // textAlign:
-                            // TextAlign.left,
                             style: TextStyle(fontSize: 25)),
                       );
                     } else {
                       return Text('noname');
                     }
                   }),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text('Anzahl'),
-                  TextField(
-                    keyboardType: TextInputType.number,
-                    controller: anzahlController,
-                    decoration: InputDecoration(hintText: 'Neue Menge'),
-                  ),
-                  Text('Mindesthaltbarkeitsdatum: '),
-                  IconButton(
-                    icon: Icon(Icons.edit_calendar),
-                    onPressed: () async {
-                      mhd = await showDatePicker(
-                          context: context,
-                          initialDate: DateTime.parse(entry.mhd),
-                          firstDate: DateTime(2022),
-                          lastDate: DateTime(2099, 12, 31));
-                    },
-                  ),
-                  Text(DateFormat('dd.MM.yyyy').format(mhd)),
-                  TextButton(
-                      onPressed: () => {
-                            DatabaseHelper.instance.updateFridgeEntry(
-                                entry, mhd!, int.parse(anzahlController.text)),
-                            reloadPage(context, WhatsInMyFridge())
+              content: StatefulBuilder(
+                builder: (context, setState) {
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text('Anzahl'),
+                      TextField(
+                        keyboardType: TextInputType.number,
+                        controller: anzahlController,
+                        decoration: InputDecoration(hintText: 'Neue Menge'),
+                      ),
+                      TextButton(
+                          onPressed: () async {
+                            mhd = (await showDatePicker(
+                                context: context,
+                                initialDate: DateTime.parse(entry.mhd),
+                                firstDate: DateTime(0000),
+                                lastDate: DateTime(9999, 12, 31)))!;
+                            setState(() {});
                           },
-                      child: Text('Submit')),
-                ],
+                          child: Text(
+                            'Mindesthaltbarkeitsdatum: ${dmy.format(mhd)}',
+                            style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                                fontSize: 16,
+                                fontWeight: FontWeight.normal),
+                          )),
+                      TextButton(
+                          onPressed: () => {
+                                DatabaseHelper.instance.updateFridgeEntry(entry,
+                                    mhd!, int.parse(anzahlController.text)),
+                                Navigator.pop(context),
+                              },
+                          child: Text('Submit')),
+                    ],
+                  );
+                },
               ),
             ));
   }

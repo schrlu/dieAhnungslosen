@@ -9,95 +9,86 @@ class Settings extends StatefulWidget {
 }
 
 class _SettingsState extends State<Settings> {
-  List<DropdownMenuItem<int>> menuItems = [
-    DropdownMenuItem(child: Text("Männlich"), value: 1),
-    DropdownMenuItem(child: Text("Weiblich"), value: 2),
-    DropdownMenuItem(child: Text("Sonstiges"), value: 3),
-  ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       drawer: NavBar(),
       appBar: AppBar(
-        title: Text('Einstellungen'),
+        title: const Text('Einstellungen'),
       ),
-      body: Column(
+      body: ListView(
+        // crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           FutureBuilder<List?>(
             future: DatabaseHelper.instance.getSettings(),
             builder: (context, snapshot) {
               if (snapshot.hasData) {
                 Map settings = snapshot.data?.first;
-                return Column(
-                  children: [
-                    Text(
-                      'Geschlecht: ${getGender(settings['gender'])}',
-                      style: const TextStyle(fontSize: 15),
-                    ),
-                    TextButton(
-                        onPressed: () {
-                          showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                    title: const Text('Geschlecht'),
-                                    content: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          TextButton(
-                                              onPressed: () {
-                                                DatabaseHelper.instance
-                                                    .updateSettings(
-                                                        'gender', 1);
-                                                setState(() {});
-                                                Navigator.pop(context);
-                                              },
-                                              child: const Text(
-                                                'weiblich',
-                                                style: TextStyle(
-                                                    color: Colors.pinkAccent),
-                                              )),TextButton(
-                                              onPressed: () {
-                                                DatabaseHelper.instance
-                                                    .updateSettings(
-                                                        'gender', 2);
-                                                setState(() {});
-                                                Navigator.pop(context);
-                                              },
-                                              child: const Text(
-                                                'männlich',
-                                                style: TextStyle(
-                                                    color: Colors.lightBlue),
-                                              )),TextButton(
-                                              onPressed: () {
-                                                DatabaseHelper.instance
-                                                    .updateSettings(
-                                                        'gender', 3);
-                                                setState(() {});
-                                                Navigator.pop(context);
-                                              },
-                                              child: Text(
-                                                'sonstiges', style: TextStyle(color: Theme.of(context).colorScheme.onSurface),),
-                                              ),
-                                        ]),
-                                  ));
-                        },
-                        child: Text(
-                          'ändern',
-                          style: TextStyle(fontSize: 12, color: Colors.blue),
-                        ))
-                  ],
+                return Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Container(
+                        decoration: const BoxDecoration(
+                            border: Border(
+                          bottom: BorderSide(width: 0.1, color: Colors.grey),
+                          top: BorderSide(width: 0.1, color: Colors.grey),
+                        )),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: InkWell(
+                            onTap: () {
+                              showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                        title: Text('Geschlecht'),
+                                        content: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              buildChoice(context, 'gender', 1,
+                                                  'weiblich'),
+                                              buildChoice(context, 'gender', 2,
+                                                  'männlich'),
+                                              buildChoice(context, 'gender', 3,
+                                                  'sonstiges'),
+                                            ]),
+                                      ));
+                            },
+                            child: Text(
+                              'Geschlecht: ${getGender(settings['gender'])}',
+                              style: const TextStyle(fontSize: 25),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 );
               } else {
-                return Text('No settings found');
+                return const Text('No settings found');
               }
             },
           )
         ],
       ),
     );
+  }
+
+  TextButton buildChoice(BuildContext context, String setting,
+      int settingNumber, String choiceString) {
+    return TextButton(
+        onPressed: () {
+          DatabaseHelper.instance.updateSettings(setting, settingNumber);
+          setState(() {});
+          Navigator.pop(context);
+        },
+        child: Text(
+          choiceString,
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+        ));
   }
 
   String? getGender(int value) {
@@ -108,10 +99,5 @@ class _SettingsState extends State<Settings> {
     } else if (value == 3) {
       return "Sonstiges";
     }
-  }
-
-  void reloadPage(BuildContext context, Widget page) {
-    Navigator.pushAndRemoveUntil(context,
-        MaterialPageRoute(builder: (context) => page), (route) => false);
   }
 }

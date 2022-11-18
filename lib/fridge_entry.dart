@@ -26,7 +26,7 @@ class FridgeEntry {
 
   factory FridgeEntry.fromMap(Map<String, dynamic> map) {
     FridgeEntry diaryEntry = FridgeEntry(
-    fridge_id:  map['diary_id'] as int,
+    fridge_id:  map['fridge_id'] as int,
     amount:  map['amount'] as int,
     mhd:  map['mhd'] as String,
     food_id:  map['food_id'] as int,

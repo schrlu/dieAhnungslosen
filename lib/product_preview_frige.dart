@@ -4,8 +4,10 @@ import 'package:dieahnungslosen/database_helper.dart';
 import 'package:dieahnungslosen/diary_entry.dart';
 import 'package:dieahnungslosen/fridge.dart';
 import 'package:dieahnungslosen/main.dart';
+import 'package:dieahnungslosen/product_preview.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:openfoodfacts/openfoodfacts.dart';
 import 'package:openfoodfacts/utils/LanguageHelper.dart';
 import 'package:openfoodfacts/utils/ProductFields.dart';
@@ -25,10 +27,15 @@ class ProductPreviewFridge extends StatefulWidget {
 }
 
 class _ProductPreviewFridgeState extends State<ProductPreviewFridge> {
+  late String _barcode;
   OwnProduct? prod;
+  DateFormat ymd = DateFormat('yyyy-MM-dd');
+  DateFormat dmy = DateFormat('dd.MM.yyyy');
+  DateTime start = DateTime(0000, 1, 1);
+  DateTime end = DateTime(9999, 12, 31);
+  DateTime date = DateTime.now().add(Duration(days: 7));
   int _groupValue = 1;
-  DateFormat formatter = DateFormat('dd.MM.yyyy');
-  DateTime? mhd = DateTime.now();
+
   @override
   Widget build(BuildContext context) {
     TextEditingController anzahlController = TextEditingController();
@@ -54,29 +61,32 @@ class _ProductPreviewFridgeState extends State<ProductPreviewFridge> {
                         buildTextFormFieldDisabled('Produktname', name),
                         buildTextFormFieldDisabled('Produktmarke', marke),
                         buildTextFormFieldDisabled('Menge', menge),
-                        ListTile(title: Text('Mindesthaltbarkeitsdatum: ')),
-                        IconButton(
-                          icon: Icon(Icons.edit_calendar),
-                          onPressed: () async {
-                            mhd = await showDatePicker(context: context,
+                        ListTile(
+                          title: Text('Mindesthaltbarkeitsdatum: ${dmy.format(date)}'),
+                          onTap: () async {
+                            date = (await showDatePicker(
+                                context: context,
                                 initialDate: DateTime.now(),
                                 firstDate: DateTime(0000),
-                                lastDate: DateTime(9999, 12, 31));
-                          },),
+                                lastDate: DateTime(9999, 12, 31)))!;
+                            setState(() {});
+                          },
+                        ),
                         ListTile(
                           title: Text('Anzahl: '),
                         ),
                         buildTextFormField('Anzahl', anzahlController),
                         IconButton(
                           onPressed: () async {
-                            // var formatter =
-                            //     DateFormat('yyyy-MM-dd hh:mm:ss');
+                            if (anzahlController.text == '') {
+                              anzahlController.text = '1';
+                            }
                             FridgeEntry entry = FridgeEntry(
                               amount: int.parse(anzahlController.text),
-                              mhd: formatter.format(mhd).toString(),
+                              mhd: ymd.format(date).toString(),
                               food_id: foodId,
                             );
-                            DatabaseHelper.instance.addFridgeEntry(entry);
+                            await DatabaseHelper.instance.addFridgeEntry(entry);
                             Navigator.pushAndRemoveUntil(
                                 context,
                                 MaterialPageRoute(
@@ -88,7 +98,35 @@ class _ProductPreviewFridgeState extends State<ProductPreviewFridge> {
                       ],
                     );
                   } else {
-                    return Text('Lädt...');
+                    return Container(
+                      child: Column(
+                        children: [
+                          Text('Scan fehlgeschlagen'),
+                          TextButton(
+                              onPressed: () async {
+                                await scan();
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          ProductPreview(_barcode),
+                                    ));
+                              },
+                              child: Text('erneut versuchen')),
+                          Text(''),
+                          TextButton(
+                              onPressed: () {
+                                Navigator.pushAndRemoveUntil(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            WhatsInMyFridge()),
+                                    (route) => false);
+                              },
+                              child: Text('abbrechen')),
+                        ],
+                      ),
+                    );
                   }
                 }),
           ),
@@ -167,5 +205,11 @@ class _ProductPreviewFridgeState extends State<ProductPreviewFridge> {
         language: OpenFoodFactsLanguage.GERMAN, fields: [ProductField.ALL]);
     ProductResult result = await OpenFoodAPIClient.getProduct(configuration);
     return result;
+  }
+
+  scan() async {
+    return await FlutterBarcodeScanner.scanBarcode(
+            "#000000", 'Abbrechen', true, ScanMode.BARCODE)
+        .then((value) => setState(() => _barcode = value));
   }
 }
