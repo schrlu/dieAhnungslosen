@@ -7,7 +7,7 @@ class DiaryEntry {
   double weight;
   final String date;
   final int food_id;
-
+  //Konstruktor
   DiaryEntry({
     this.diary_id,
     required this.weight,

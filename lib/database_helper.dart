@@ -27,22 +27,23 @@ class DatabaseHelper {
     );
   }
 
+  //Erstellung der drei Datenbanktabellen und einfügen der Standard-Einstellungen bei Installation der App
   Future _onCreate(Database db, int version) async {
     await db.execute('''
       CREATE TABLE food(
       food_id INTEGER PRIMARY KEY AUTOINCREMENT,
       barcode STRING,
       name STRING,
-      marke STRING,
-      menge STRING,
-      menge_ml DECIMAL,
-      kalorien INTEGER,
-      fett DECIMAL,
-      gesaettigt DECIMAL,
-      kohlenhydrate DECIMAL,
-      davonZucker DECIMAL,
-      eiweiss DECIMAL,
-      salz DECIMAL
+      brand STRING,
+      quantity STRING,
+      quantity_ml DECIMAL,
+      calories INTEGER,
+      fat DECIMAL,
+      saturated DECIMAL,
+      carbohydrates DECIMAL,
+      sugar DECIMAL,
+      protein DECIMAL,
+      salt DECIMAL
       )
     ''');
     await db.execute('''
@@ -50,7 +51,7 @@ class DatabaseHelper {
       diary_id INTEGER PRIMARY KEY AUTOINCREMENT,
       weight DECIMAL,
       date DATE,
-      food_id INTEGER,
+      food_id INTEGER NOT NULL,
       FOREIGN KEY (food_id) REFERENCES food (food_id)
       )
     ''');
@@ -67,39 +68,29 @@ class DatabaseHelper {
     CREATE TABLE fridge(
       fridge_id INTEGER PRIMARY KEY AUTOINCREMENT,
       amount INTEGER,
-      food_id INTEGER,
+      food_id INTEGER NOT NULL,
       mhd DATE,
       FOREIGN KEY (food_id) REFERENCES food (food_id)
       )
     ''');
   }
 
-  Future<List<OwnProduct>> getProducts() async {
-    Database db = await instance.database;
-    var products = await db.query('food');
-    List<OwnProduct> productsList = products.isNotEmpty
-        ? products.map((e) => OwnProduct.fromMap(e)).toList()
-        : [];
-    return productsList;
-  }
-
   Future<List> getOneProductFromId(int id) async {
     Database db = await DatabaseHelper.instance.database;
-    // get single row
     List<String> columnsToSelect = [
       'food_id',
       'barcode',
       'name',
-      'marke',
-      'menge',
-      'menge_ml',
-      'kalorien',
-      'fett',
-      'gesaettigt',
-      'kohlenhydrate',
-      'davonZucker',
-      'eiweiss',
-      'salz'
+      'brand',
+      'quantity',
+      'quantity_ml',
+      'calories',
+      'fat',
+      'saturated',
+      'carbohydrates',
+      'sugar',
+      'protein',
+      'salt'
     ];
     String whereString = 'food_id = ?';
     List<dynamic> whereArguments = [id];
@@ -110,23 +101,22 @@ class DatabaseHelper {
     return result;
   }
 
-  Future<List> getOneProduct(String barcode) async {
+  Future<List> getOneProductFromBarcode(String barcode) async {
     Database db = await DatabaseHelper.instance.database;
-    // get single row
     List<String> columnsToSelect = [
       'food_id',
       'barcode',
       'name',
-      'marke',
-      'menge',
-      'menge_ml',
-      'kalorien',
-      'fett',
-      'gesaettigt',
-      'kohlenhydrate',
-      'davonZucker',
-      'eiweiss',
-      'salz'
+      'brand',
+      'quantity',
+      'quantity_ml',
+      'calories',
+      'fat',
+      'saturated',
+      'carbohydrates',
+      'sugar',
+      'protein',
+      'salt'
     ];
     String whereString = 'barcode = ?';
     List<dynamic> whereArguments = [barcode];
@@ -162,7 +152,6 @@ class DatabaseHelper {
   }
 
   Future<bool> checkProduct(String barcode) async {
-    // get a reference to the database
     Database db = await DatabaseHelper.instance.database;
     // get single row
     List<String> columnsToSelect = ['barcode'];
@@ -176,7 +165,6 @@ class DatabaseHelper {
   }
 
   Future<bool> checkDiaryEntry(int id, String date) async {
-    // get a reference to the database
     Database db = await DatabaseHelper.instance.database;
     // get single row
     List<Map> result = await db.rawQuery(
@@ -184,9 +172,8 @@ class DatabaseHelper {
         [id]);
     return result.isNotEmpty;
   }
-
+  //Check ob ein Eintrag mit der gegebenen ID existiert
   Future<bool> checkFridgeEntry(int id, String mhd) async {
-    // get a reference to the database
     Database db = await DatabaseHelper.instance.database;
     // get single row
     List<Map> result = await db.rawQuery(
@@ -194,9 +181,8 @@ class DatabaseHelper {
         [id]);
     return result.isNotEmpty;
   }
-
+  //Check ob ein Eintrag (außer der aufrufende Eintrag) mit der gegebenen ID existiert
   Future<bool> checkFridgeEntryUpdate(int id, String mhd, int idNot) async {
-    // get a reference to the database
     Database db = await DatabaseHelper.instance.database;
     // get single row
     List<Map> result = await db.rawQuery(
@@ -255,16 +241,6 @@ class DatabaseHelper {
     }
   }
 
-  // Future<int> addFridgeEntry(FridgeEntry entry) async {
-  //   Database db = await instance.database;
-  //   return await db.insert('fridge', entry.toMap());
-  // }
-
-  Future<int> removeProduct(int id) async {
-    Database db = await instance.database;
-    return await db.delete('food', where: 'food_id = ?', whereArgs: [id]);
-  }
-
   Future<int> removeDiaryEntry(int id) async {
     Database db = await instance.database;
     return await db
@@ -276,11 +252,6 @@ class DatabaseHelper {
     return await db.delete('fridge', where: 'fridge_id = ?', whereArgs: [id]);
   }
 
-  Future<int> updateProduct(OwnProduct product) async {
-    Database db = await instance.database;
-    return await db.update('food', product.toMap(),
-        where: 'food_id = ?', whereArgs: [product.food_id]);
-  }
 
   updateDiaryEntry(DiaryEntry entry, double weight) async {
     Database db = await instance.database;
@@ -314,19 +285,17 @@ class DatabaseHelper {
     entry.mhd = formatter.format(mhd);
     entry.amount = amount;
 
-    if (await checkFridgeEntryUpdate(entry.food_id, entry.mhd, entry.fridge_id!)) {
+    if (await checkFridgeEntryUpdate(
+        entry.food_id, entry.mhd, entry.fridge_id!)) {
       List<Map> result = await db.rawQuery(
           '''SELECT fridge_id, amount FROM fridge WHERE food_id = ? AND mhd = '${entry.mhd}' ''',
           [entry.food_id]);
-      print('test');
-      print(jsonDecode(jsonEncode(result.first)));
       await db.rawUpdate(
           ''' UPDATE fridge SET amount = ${result.first['amount'] + entry.amount} where fridge_id = ${result.first['fridge_id']}''');
       await db.rawDelete(
           ''' DELETE FROM fridge WHERE fridge_id = ${entry.fridge_id}''');
       return 0;
     } else {
-      print('test123');
       return await db.update('fridge', entry.toMap(),
           where: 'fridge_id = ?', whereArgs: [entry.fridge_id]);
     }
@@ -334,13 +303,13 @@ class DatabaseHelper {
 
   Future<List?> getSummary() async {
     Database db = await instance.database;
-    String sqlString = '''SELECT sum(fd.weight*f.kalorien/100) as kalorien,
-     sum(fd.weight*f.fett/100) as fett, 
-     sum(fd.weight*f.gesaettigt/100) as gesaettigt, 
-     sum(fd.weight*f.kohlenhydrate/100) as kohlenhydrate,
-     sum(fd.weight*f.davonZucker/100) as davonZucker,
-     sum(fd.weight*f.eiweiss/100) as eiweiss,
-     sum(fd.weight*f.salz/100) as salz
+    String sqlString = '''SELECT sum(fd.weight*f.calories/100) as calories,
+     sum(fd.weight*f.fat/100) as fat, 
+     sum(fd.weight*f.saturated/100) as saturated, 
+     sum(fd.weight*f.carbohydrates/100) as carbohydrates,
+     sum(fd.weight*f.sugar/100) as sugar,
+     sum(fd.weight*f.protein/100) as protein,
+     sum(fd.weight*f.salt/100) as salt
      FROM food AS f
      JOIN food_diary AS fd ON
      f.food_id = fd.food_id
@@ -352,13 +321,13 @@ class DatabaseHelper {
   Future<List?> getSummaryCurrentDay() async {
     DateFormat ymd = DateFormat('yyyy-MM-dd');
     Database db = await instance.database;
-    String sqlString = '''SELECT sum(fd.weight*f.kalorien/100) as kalorien,
-     sum(fd.weight*f.fett/100) as fett, 
-     sum(fd.weight*f.gesaettigt/100) as gesaettigt, 
-     sum(fd.weight*f.kohlenhydrate/100) as kohlenhydrate,
-     sum(fd.weight*f.davonZucker/100) as davonZucker,
-     sum(fd.weight*f.eiweiss/100) as eiweiss,
-     sum(fd.weight*f.salz/100) as salz
+    String sqlString = '''SELECT sum(fd.weight*f.calories/100) as calories,
+     sum(fd.weight*f.fat/100) as fat, 
+     sum(fd.weight*f.saturated/100) as saturated, 
+     sum(fd.weight*f.carbohydrates/100) as carbohydrates,
+     sum(fd.weight*f.sugar/100) as sugar,
+     sum(fd.weight*f.protein/100) as protein,
+     sum(fd.weight*f.salt/100) as salt
      FROM food AS f
      JOIN food_diary AS fd ON
      f.food_id = fd.food_id
@@ -389,23 +358,7 @@ class DatabaseHelper {
     String name = result.first['name'];
     return name;
   }
-
-  Future<String?> getMarke(int id) async {
-    // get a reference to the database
-    Database db = await DatabaseHelper.instance.database;
-
-    // get single row
-    List<String> columnsToSelect = ['marke'];
-    String whereString = 'food_id = ?';
-    List<dynamic> whereArguments = [id];
-    List<Map> result = await db.query('food',
-        columns: columnsToSelect,
-        where: whereString,
-        whereArgs: whereArguments);
-    String marke = result.first['marke'];
-    return marke;
-  }
-
+  //Maximaler Datumsunterschied zwischen Einträgen der Ernährungstagebuch-Einträge
   Future<int?> getMaxDateDiff() async {
     Database db = await DatabaseHelper.instance.database;
     List result = await db.rawQuery('''Select Cast ((

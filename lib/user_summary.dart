@@ -25,6 +25,7 @@ class UserSummary extends StatefulWidget {
 
 class _UserSummaryState extends State<UserSummary> {
   late int gender;
+  //Standardwerte der Nährwerte
   int cal1Day = 2000;
   double fat1Day = 65;
   double carb1Day = 300;
@@ -42,9 +43,11 @@ class _UserSummaryState extends State<UserSummary> {
         ),
         body: Padding(
             padding: const EdgeInsets.all(12.0),
+            //Auslesen der Einstellungen aus der Datenbank
             child: FutureBuilder<List?>(
                 future: DatabaseHelper.instance.getSettings(),
                 builder: (context, snapshot) {
+                  //Wenn Einstellungen vorhanden sind, sollen diese gespeichert werden
                   if (snapshot.hasData) {
                     Map settings = snapshot.data?.first;
                     gender = settings['gender'];
@@ -52,28 +55,30 @@ class _UserSummaryState extends State<UserSummary> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Spacer(),
+                        const Spacer(),
+                        //Nährwertzunahme der letzten 7 Tage anzeigen
                         FutureBuilder<List?>(
                             future: DatabaseHelper.instance.getSummary(),
                             builder: (context, snapshot) {
                               if (snapshot.hasData) {
+                                //Speichern der Nährwertzunahmen in einer Map
                                 summary = {
-                                  1: snapshot.data?.first['kalorien'],
-                                  2: snapshot.data?.first['fett'],
-                                  3: snapshot.data?.first['gesaettigt'],
-                                  4: snapshot.data?.first['kohlenhydrate'],
-                                  5: snapshot.data?.first['davonZucker'],
-                                  6: snapshot.data?.first['eiweiss'],
-                                  7: snapshot.data?.first['salz']
+                                  1: snapshot.data?.first['calories'],
+                                  2: snapshot.data?.first['fat'],
+                                  3: snapshot.data?.first['saturated'],
+                                  4: snapshot.data?.first['carbohydrates'],
+                                  5: snapshot.data?.first['sugar'],
+                                  6: snapshot.data?.first['protein'],
+                                  7: snapshot.data?.first['salt']
                                 };
-
+                                //Null-Werte werden auf 0 gesetzt
                                 summary.forEach((key, value) {
                                   if (value == null) {
                                     summary[key] = 0;
                                   }
                                 });
+                                //Ausgabe der Werte
                                 return Column(
-                                    // mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
@@ -109,6 +114,7 @@ class _UserSummaryState extends State<UserSummary> {
                               }
                             }),
                         Spacer(),
+                        //Berechnen der Differenz zwischen aktuellen Datum und datum des ältesten Eintrags (Ergebnis maximal 7)
                         FutureBuilder<int?>(
                             future: DatabaseHelper.instance.getMaxDateDiff(),
                             builder: (context, snapshot) {
@@ -120,8 +126,8 @@ class _UserSummaryState extends State<UserSummary> {
                                   dateDiff++;
                                 }
 
+                                //Ausgabe des Nährwert Sollvergleichs
                                 return Column(
-                                    // mainAxisAlignment: MainAxisAlignment.start,
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
@@ -156,27 +162,26 @@ class _UserSummaryState extends State<UserSummary> {
                               }
                             }),
                         Spacer(),
+                        //Ausgabe der Nährwertzunahme des aktuellen Tages
                         FutureBuilder<List?>(
                             future: DatabaseHelper.instance.getSummaryCurrentDay(),
                             builder: (context, snapshot) {
                               if (snapshot.hasData) {
                                 summary = {
-                                  1: snapshot.data?.first['kalorien'],
-                                  2: snapshot.data?.first['fett'],
-                                  3: snapshot.data?.first['gesaettigt'],
-                                  4: snapshot.data?.first['kohlenhydrate'],
-                                  5: snapshot.data?.first['davonZucker'],
-                                  6: snapshot.data?.first['eiweiss'],
-                                  7: snapshot.data?.first['salz']
+                                  1: snapshot.data?.first['calories'],
+                                  2: snapshot.data?.first['fat'],
+                                  3: snapshot.data?.first['saturated'],
+                                  4: snapshot.data?.first['carbohydrates'],
+                                  5: snapshot.data?.first['sugar'],
+                                  6: snapshot.data?.first['protein'],
+                                  7: snapshot.data?.first['salt']
                                 };
-
                                 summary.forEach((key, value) {
                                   if (value == null) {
                                     summary[key] = 0;
                                   }
                                 });
                                 return Column(
-                                  // mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     crossAxisAlignment:
                                     CrossAxisAlignment.start,
                                     children: [
@@ -220,7 +225,7 @@ class _UserSummaryState extends State<UserSummary> {
                   }
                 })));
   }
-
+  //Einstellen der Nährwertziele nach Geschlecht
   void setGoals() {
     if (gender == 1) {
       cal1Day = 1900;

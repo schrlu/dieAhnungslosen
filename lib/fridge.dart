@@ -30,6 +30,7 @@ class _WhatsInMyFridgeState extends State<WhatsInMyFridge> {
         appBar: AppBar(
           title: const Text('Kühlschrank'),
         ),
+        //FutureBuilder für die Datenbankabfrage für Kühlschrank-Einträge
         body: FutureBuilder<List<FridgeEntry>>(
             future: DatabaseHelper.instance.getFridgeEntries(),
             builder: (BuildContext context,
@@ -39,15 +40,19 @@ class _WhatsInMyFridgeState extends State<WhatsInMyFridge> {
                   child: Text('Loading...'),
                 );
               }
+              //Wenn keine Einträge vorhanden sind, soll dies auf dem Bildschirm angezeigt werden
               return snapshot.data!.isEmpty
                   ? const Center(
                       child: Text('Keine Einträge vorhanden'),
                     )
-                  : ListView(
+                  :
+                  //ListView mit in dem alle Einträge gezeigt werden
+                  ListView(
                       children: snapshot.data!.map((entry) {
                         return Padding(
                           padding:
                               const EdgeInsets.fromLTRB(10.0, 0.0, 10.0, 0.0),
+                          //Container mit Linien zur Abtrennung der einzelnen Einträge
                           child: Container(
                               decoration: const BoxDecoration(
                                   border: Border(
@@ -55,13 +60,17 @@ class _WhatsInMyFridgeState extends State<WhatsInMyFridge> {
                                     BorderSide(width: 0.2, color: Colors.grey),
                                 top: BorderSide(width: 0.2, color: Colors.grey),
                               )),
+                              //Eintrag anklickbar machen
                               child: InkWell(
                                 onTap: () {
+                                  //Nährwerte pro 100g des Produktes anzeigen
                                   watchProduct(entry.food_id);
                                 },
+                                //Den Eintrag slidable machen
                                 child: Slidable(
                                     actionPane: SlidableDrawerActionPane(),
                                     secondaryActions: [
+                                      //Den Eintrag editierbar machen
                                       IconSlideAction(
                                         caption: 'Edit',
                                         color: Colors.black45,
@@ -70,6 +79,7 @@ class _WhatsInMyFridgeState extends State<WhatsInMyFridge> {
                                           editProduct(entry);
                                         },
                                       ),
+                                      //Den Eintrag löschbar machen
                                       IconSlideAction(
                                         caption: 'Delete',
                                         color: Colors.red,
@@ -82,70 +92,58 @@ class _WhatsInMyFridgeState extends State<WhatsInMyFridge> {
                                         },
                                       )
                                     ],
+                                    //Den Eintrag in ein Grid aufteilen mit 3 Spalten und 2 Zeilen
                                     child: GridView.count(
                                       crossAxisCount: 3,
                                       shrinkWrap: true,
                                       childAspectRatio: 2,
                                       children: <Widget>[
+                                        //Attribute des Produktes des Eintrags aus der Datenbank entnehmen
+                                        FutureBuilder<List?>(
+                                            future: DatabaseHelper.instance
+                                                .getOneProductFromId(
+                                                    entry.food_id),
+                                            builder: (context, snapshot) {
+                                              if (snapshot.hasData) {
+                                                //Spalte mit brand und Name des Produkts
+                                                return Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    children: [
+                                                      buildEntryText(snapshot
+                                                          .data!
+                                                          .first['brand']),
+                                                      buildEntryText(snapshot
+                                                          .data!.first['name'])
+                                                    ]);
+                                              } else {
+                                                return Text('noname');
+                                              }
+                                            }),
+                                        //Spalte mit Anzahl des Produkts
                                         Column(
                                           crossAxisAlignment:
                                               CrossAxisAlignment.start,
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
                                           children: [
-                                            FutureBuilder<String?>(
-                                                future: DatabaseHelper.instance
-                                                    .getMarke(entry.food_id),
-                                                builder: (context, snapshot) {
-                                                  if (snapshot.hasData) {
-                                                    return Container(
-                                                      child: Text(
-                                                          snapshot.data!,
-                                                          // textAlign:
-                                                          // TextAlign.left,
-                                                          style: TextStyle(
-                                                              fontSize: 12)),
-                                                    );
-                                                  } else {
-                                                    return Text('noname');
-                                                  }
-                                                }),
-                                            FutureBuilder<String?>(
-                                                future: DatabaseHelper.instance
-                                                    .getName(entry.food_id),
-                                                builder: (context, snapshot) {
-                                                  if (snapshot.hasData) {
-                                                    return Container(
-                                                      child: Text(
-                                                          snapshot.data!,
-                                                          // textAlign:
-                                                          // TextAlign.left,
-                                                          style: TextStyle(
-                                                              fontSize: 15)),
-                                                    );
-                                                  } else {
-                                                    return Text('noname');
-                                                  }
-                                                }),
+                                            buildEntryText(
+                                                'Anzahl: ${entry.amount}')
                                           ],
                                         ),
+                                        //Spalte mit Mindesthaltbarkeitsdatum des Eintrags
                                         Column(
                                           crossAxisAlignment:
                                               CrossAxisAlignment.start,
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
                                           children: [
-                                            Text('Anzahl: ${entry.amount}'),
-                                          ],
-                                        ),
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Text('Datum:'),
-                                            Text(
+                                            buildEntryText('Datum:'),
+                                            buildEntryText(
                                                 '${formatter.format(DateTime.parse(entry.mhd))}'),
                                           ],
                                         ),
@@ -156,21 +154,21 @@ class _WhatsInMyFridgeState extends State<WhatsInMyFridge> {
                       }).toList(),
                     );
             }),
+        //Button zum neu laden der Liste, da nach dem editieren die Werte nicht automatisch aktualisiert werden
         floatingActionButton: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            Padding(
-                padding: EdgeInsets.only(top: 15),
-                child: FloatingActionButton(
-                    heroTag: 'reload Button',
+            Column(
+              children: [
+                FloatingActionButton(
                     onPressed: () async {
                       setState(() {});
                     },
-                    child: Icon(Icons.refresh))),
-            Padding(
-                padding: EdgeInsets.only(top: 15),
-                child: FloatingActionButton(
-                    heroTag: 'Scan-Button',
+                    child: const Icon(Icons.refresh)),
+                //Platz zwischen Buttons
+                const SizedBox(height: 10),
+                //Button zum Scannen des Barcodes eines Produktes
+                FloatingActionButton(
                     onPressed: () async {
                       await scan();
                       Navigator.push(
@@ -180,34 +178,26 @@ class _WhatsInMyFridgeState extends State<WhatsInMyFridge> {
                                 ProductPreviewFridge(_barcode),
                           ));
                     },
-                    child: Icon(Icons.camera_alt))),
+                    child: Icon(Icons.camera_alt))
+              ],
+            ),
           ],
         ));
   }
 
+  //Methode zum bauen eines Entry Textes
+  Flexible buildEntryText(String text) {
+    return Flexible(child: Text(text, style: TextStyle(fontSize: 12)));
+  }
+
+  //Methode zum scannen eines Barcodes
   scan() async {
     return await FlutterBarcodeScanner.scanBarcode(
             "#000000", 'Abbrechen', true, ScanMode.BARCODE)
         .then((value) => setState(() => _barcode = value));
   }
 
-  void reloadPage(BuildContext context, Widget page) {
-    Navigator.pushAndRemoveUntil(context,
-        MaterialPageRoute(builder: (context) => page), (route) => false);
-  }
-
-  Widget eingabefeld(String title, String decoration) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title, textAlign: TextAlign.left),
-        TextField(decoration: InputDecoration(hintText: decoration)),
-        const Padding(padding: EdgeInsets.only(bottom: 30)),
-      ],
-      // mainAxisAlignment: MainAxisAlignment.spaceAround,
-    );
-  }
-
+  //Methde zum aufrufen eines Fensters in dem man den Eintrag editieren kann
   editProduct(FridgeEntry entry) {
     DateTime mhd = DateTime.parse(entry.mhd);
     DateFormat ymd = DateFormat('yyyy-MM-dd');
@@ -269,6 +259,7 @@ class _WhatsInMyFridgeState extends State<WhatsInMyFridge> {
             ));
   }
 
+  //Methode zum aufrufen eines Fensters, in dem die Nährwerte des Produkts angezeigt werden
   watchProduct(int id) {
     return showDialog(
         context: context,
@@ -283,16 +274,16 @@ class _WhatsInMyFridgeState extends State<WhatsInMyFridge> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                          'Kalorien: ${snapshot.data!.first['kalorien']} kcal'),
-                      Text('Fett: ${snapshot.data!.first['fett']} g'),
+                          'Kalorien: ${snapshot.data!.first['calories']} kcal'),
+                      Text('Fett: ${snapshot.data!.first['fat']} g'),
                       Text(
-                          'davon gesättigte Fettsäuren: ${snapshot.data!.first['gesaettigt']} g'),
+                          'davon gesättigte Fettsäuren: ${snapshot.data!.first['saturated']} g'),
                       Text(
-                          'Kohlenhydrate: ${snapshot.data!.first['kohlenhydrate']} g'),
+                          'Kohlenhydrate: ${snapshot.data!.first['carbohydrates']} g'),
                       Text(
-                          'davon Zucker: ${snapshot.data!.first['davonZucker']} g'),
-                      Text('Eiweiß: ${snapshot.data!.first['eiweiss']} g'),
-                      Text('Salz: ${snapshot.data!.first['salz']} g'),
+                          'davon Zucker: ${snapshot.data!.first['sugar']} g'),
+                      Text('Eiweiß: ${snapshot.data!.first['protein']} g'),
+                      Text('Salz: ${snapshot.data!.first['salt']} g'),
                     ],
                   ),
                 );

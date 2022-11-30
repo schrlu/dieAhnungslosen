@@ -7,7 +7,7 @@ class FridgeEntry {
   int amount;
   String mhd;
   final int food_id;
-
+  //Konstruktor
   FridgeEntry({
     this.fridge_id,
     required this.amount,

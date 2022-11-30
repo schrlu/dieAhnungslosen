@@ -19,7 +19,7 @@ import 'package:intl/intl.dart';
 
 class ProductPreviewFridge extends StatefulWidget {
   final String _barcode;
-
+  //Konstruktor
   ProductPreviewFridge(this._barcode);
 
   @override
@@ -33,7 +33,7 @@ class _ProductPreviewFridgeState extends State<ProductPreviewFridge> {
   DateFormat dmy = DateFormat('dd.MM.yyyy');
   DateTime start = DateTime(0000, 1, 1);
   DateTime end = DateTime(9999, 12, 31);
-  DateTime date = DateTime.now().add(Duration(days: 7));
+  DateTime date = DateTime.now();
   int _groupValue = 1;
 
   @override
@@ -43,26 +43,29 @@ class _ProductPreviewFridgeState extends State<ProductPreviewFridge> {
     return Scaffold(
       drawer: NavBar(),
       appBar: AppBar(
-        title: Text('Produkt Vorschau'),
+        title: const Text('Produkt Vorschau'),
       ),
       body: Column(
         children: [
           Center(
+            //Produkt mithilfe des gescannten Barcodes aus der Datenbank oder API lesen
             child: FutureBuilder<List?>(
                 future: getProduct(widget._barcode),
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
                     var name = snapshot.data!.first['name'];
-                    var marke = snapshot.data!.first['marke'];
-                    var menge = snapshot.data!.first['menge'];
+                    var brand = snapshot.data!.first['brand'];
+                    var quantity = snapshot.data!.first['quantity'];
                     foodId = snapshot.data!.first['food_id'];
                     return Column(
                       children: [
                         buildTextFormFieldDisabled('Produktname', name),
-                        buildTextFormFieldDisabled('Produktmarke', marke),
-                        buildTextFormFieldDisabled('Menge', menge),
+                        buildTextFormFieldDisabled('Produktmarke', brand),
+                        buildTextFormFieldDisabled('Menge', quantity),
+                        //Angabe des Mindesthaltbarkeitsdatums
                         ListTile(
-                          title: Text('Mindesthaltbarkeitsdatum: ${dmy.format(date)}'),
+                          title: Text(
+                              'Mindesthaltbarkeitsdatum: ${dmy.format(date)}'),
                           onTap: () async {
                             date = (await showDatePicker(
                                 context: context,
@@ -72,10 +75,12 @@ class _ProductPreviewFridgeState extends State<ProductPreviewFridge> {
                             setState(() {});
                           },
                         ),
-                        ListTile(
-                          title: Text('Anzahl: '),
+                        //Festlegen der Anzahl
+                        const ListTile(
+                          title: Text('Anzahl:'),
                         ),
                         buildTextFormField('Anzahl', anzahlController),
+                        //Bestätigungsbutton
                         IconButton(
                           onPressed: () async {
                             if (anzahlController.text == '') {
@@ -98,34 +103,33 @@ class _ProductPreviewFridgeState extends State<ProductPreviewFridge> {
                       ],
                     );
                   } else {
-                    return Container(
-                      child: Column(
-                        children: [
-                          Text('Scan fehlgeschlagen'),
-                          TextButton(
-                              onPressed: () async {
-                                await scan();
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
+                    //Erneut versuchen oder abbrechen bei Fehlschlag des Scans
+                    return Column(
+                      children: [
+                        const Text('Scan fehlgeschlagen'),
+                        TextButton(
+                            onPressed: () async {
+                              await scan();
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        ProductPreviewFridge(_barcode),
+                                  ));
+                            },
+                            child: const Text('erneut versuchen')),
+                        const Text(''),
+                        TextButton(
+                            onPressed: () {
+                              Navigator.pushAndRemoveUntil(
+                                  context,
+                                  MaterialPageRoute(
                                       builder: (context) =>
-                                          ProductPreview(_barcode),
-                                    ));
-                              },
-                              child: Text('erneut versuchen')),
-                          Text(''),
-                          TextButton(
-                              onPressed: () {
-                                Navigator.pushAndRemoveUntil(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) =>
-                                            WhatsInMyFridge()),
-                                    (route) => false);
-                              },
-                              child: Text('abbrechen')),
-                        ],
-                      ),
+                                          const WhatsInMyFridge()),
+                                  (route) => false);
+                            },
+                            child: const Text('abbrechen')),
+                      ],
                     );
                   }
                 }),
@@ -134,6 +138,7 @@ class _ProductPreviewFridgeState extends State<ProductPreviewFridge> {
       ),
     );
   }
+
 
   double getWeight(int weight, String controller) {
     if (_groupValue == 1) {
@@ -167,32 +172,34 @@ class _ProductPreviewFridgeState extends State<ProductPreviewFridge> {
     );
   }
 
+  //Wenn ein Produkt mit dem Barcode bereits vorhanden ist, wird dies benutzt, wenn nicht, dann wird über die API danach gesucht
   Future<List?> getProduct(String barcode) async {
     if (await DatabaseHelper.instance.checkProduct(barcode)) {
-      return DatabaseHelper.instance.getOneProduct(barcode);
+      return DatabaseHelper.instance.getOneProductFromBarcode(barcode);
     } else {
       ProductResult result = await apiConfigurator(barcode);
       OwnProduct productObj = apiGetProduct(result, barcode);
       DatabaseHelper.instance.addProduct(productObj);
-      return DatabaseHelper.instance.getOneProduct(barcode);
+      return DatabaseHelper.instance.getOneProductFromBarcode(barcode);
     }
   }
 
+  //Erstellen eines Produkt aus den Daten der API
   OwnProduct apiGetProduct(ProductResult result, String barcode) {
     if (result.status == 1) {
       OwnProduct productApi = OwnProduct(
           barcode: jsonDecode(jsonEncode(result.product))['code'],
           name: jsonDecode(jsonEncode(result.product))['product_name'],
-          marke: jsonDecode(jsonEncode(result.product))['brands'],
-          menge: jsonDecode(jsonEncode(result.product))['quantity'],
-          menge_ml: jsonDecode(jsonEncode(result.product))['product_quantity'],
-          kalorien: jsonEncode(result.product?.nutriments?.energyKcal100g),
-          fett: jsonEncode(result.product?.nutriments?.fat),
-          gesaettigt: jsonEncode(result.product?.nutriments?.saturatedFat),
-          kohlenhydrate: jsonEncode(result.product?.nutriments?.carbohydrates),
-          davonZucker: jsonEncode(result.product?.nutriments?.sugars),
-          eiweiss: jsonEncode(result.product?.nutriments?.proteins),
-          salz: jsonEncode(result.product?.nutriments?.sodium));
+          brand: jsonDecode(jsonEncode(result.product))['brands'],
+          quantity: jsonDecode(jsonEncode(result.product))['quantity'],
+          quantity_ml: jsonDecode(jsonEncode(result.product))['product_quantity'],
+          calories: jsonEncode(result.product?.nutriments?.energyKcal100g),
+          fat: jsonEncode(result.product?.nutriments?.fat),
+          saturated: jsonEncode(result.product?.nutriments?.saturatedFat),
+          carbohydrates: jsonEncode(result.product?.nutriments?.carbohydrates),
+          sugar: jsonEncode(result.product?.nutriments?.sugars),
+          protein: jsonEncode(result.product?.nutriments?.proteins),
+          salt: jsonEncode(result.product?.nutriments?.sodium));
       DatabaseHelper.instance.addProduct(productApi);
       return productApi;
     } else {
@@ -200,6 +207,7 @@ class _ProductPreviewFridgeState extends State<ProductPreviewFridge> {
     }
   }
 
+  //Konfiguration der API
   Future<ProductResult> apiConfigurator(String barcode) async {
     ProductQueryConfiguration configuration = ProductQueryConfiguration(barcode,
         language: OpenFoodFactsLanguage.GERMAN, fields: [ProductField.ALL]);
@@ -207,6 +215,7 @@ class _ProductPreviewFridgeState extends State<ProductPreviewFridge> {
     return result;
   }
 
+  //Barcode Scan-Funktion
   scan() async {
     return await FlutterBarcodeScanner.scanBarcode(
             "#000000", 'Abbrechen', true, ScanMode.BARCODE)

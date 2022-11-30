@@ -17,6 +17,7 @@ import 'package:intl/intl.dart';
 class ProductPreview extends StatefulWidget {
   final String _barcode;
 
+  //Konstruktor
   ProductPreview(this._barcode);
 
   @override
@@ -35,7 +36,7 @@ class _ProductPreviewState extends State<ProductPreview> {
 
   @override
   Widget build(BuildContext context) {
-    TextEditingController mengeController = TextEditingController();
+    TextEditingController quantityController = TextEditingController();
     var foodId = 0;
     return Scaffold(
       drawer: NavBar(),
@@ -45,18 +46,20 @@ class _ProductPreviewState extends State<ProductPreview> {
       body: Column(
         children: [
           Center(
+            //Produkt mithilfe des gescannten Barcodes aus der Datenbank oder API lesen
             child: FutureBuilder<List?>(
                 future: getProduct(widget._barcode),
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
                     var name = snapshot.data!.first['name'];
-                    var marke = snapshot.data!.first['marke'];
+                    var brand = snapshot.data!.first['brand'];
                     foodId = snapshot.data!.first['food_id'];
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         buildTextFormFieldDisabled('Produktname:', name),
-                        buildTextFormFieldDisabled('Produktmarke:', marke),
+                        buildTextFormFieldDisabled('Produktmarke:', brand),
+                        //Angabe des Eintragsdatums
                         TextButton(
                           onPressed: () async {
                             date = (await showDatePicker(
@@ -68,11 +71,18 @@ class _ProductPreviewState extends State<ProductPreview> {
                           },
                           child: Padding(
                             padding: EdgeInsets.only(left: 12),
-                            child: Text('Datum: ${dmy.format(date)}',
-                                style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 16, fontWeight: FontWeight.normal),),
+                            child: Text(
+                              'Datum: ${dmy.format(date)}',
+                              style: TextStyle(
+                                  color:
+                                      Theme.of(context).colorScheme.onSurface,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.normal),
+                            ),
                           ),
                         ),
-                        ListTile(
+                        //Festlegen der quantity
+                        const ListTile(
                           title: Text('Menge in g/ml'),
                         ),
                         RadioListTile(
@@ -81,7 +91,7 @@ class _ProductPreviewState extends State<ProductPreview> {
                           onChanged: (newValue) => setState(() =>
                               _groupValue = int.parse(newValue.toString())),
                           title: Text(
-                              'Standardmenge: (${snapshot.data!.first['menge_ml']})'),
+                              'Standardmenge: (${snapshot.data!.first['quantity_ml']})'),
                         ),
                         RadioListTile(
                           value: 2,
@@ -89,15 +99,16 @@ class _ProductPreviewState extends State<ProductPreview> {
                           onChanged: (newValue) => setState(() =>
                               _groupValue = int.parse(newValue.toString())),
                           title: buildTextFormField(
-                              'Andere Menge', mengeController),
+                              'Andere Menge', quantityController),
                         ),
+                        //Bestätigungsbutton
                         IconButton(
                           onPressed: () async {
                             String formattedDate = ymd.format(date);
                             DiaryEntry entry = DiaryEntry(
                               weight: getWeight(
-                                  snapshot.data!.first['menge_ml'],
-                                  mengeController.text),
+                                  snapshot.data!.first['quantity_ml'],
+                                  quantityController.text),
                               date: formattedDate,
                               food_id: foodId,
                             );
@@ -113,23 +124,32 @@ class _ProductPreviewState extends State<ProductPreview> {
                       ],
                     );
                   } else {
+                    //Erneut versuchen oder abbrechen bei Fehlschlag des Scans
                     return Container(
                       child: Column(
                         children: [
                           Text('Scan fehlgeschlagen'),
-                          TextButton(onPressed: () async {
-                            await scan();
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ProductPreview(_barcode),
-                                ));
-                          }, child: Text('erneut versuchen')),
+                          TextButton(
+                              onPressed: () async {
+                                await scan();
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          ProductPreview(_barcode),
+                                    ));
+                              },
+                              child: Text('erneut versuchen')),
                           Text(''),
-                          TextButton(onPressed: (){
-                            Navigator.pushAndRemoveUntil(context,
-                                MaterialPageRoute(builder: (context) => FoodDiary()), (route) => false);
-                          }, child: Text('abbrechen')),
+                          TextButton(
+                              onPressed: () {
+                                Navigator.pushAndRemoveUntil(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => FoodDiary()),
+                                    (route) => false);
+                              },
+                              child: Text('abbrechen')),
                         ],
                       ),
                     );
@@ -173,33 +193,35 @@ class _ProductPreviewState extends State<ProductPreview> {
           hintText: '$decoration')),
     );
   }
-
+  
+  //Wenn ein Produkt mit dem Barcode bereits vorhanden ist, wird dies benutzt, wenn nicht, dann wird über die API danach gesucht
   Future<List?> getProduct(String barcode) async {
     if (await DatabaseHelper.instance.checkProduct(barcode)) {
-      return DatabaseHelper.instance.getOneProduct(barcode);
+      return DatabaseHelper.instance.getOneProductFromBarcode(barcode);
     } else {
       ProductResult result = await apiConfigurator(barcode);
       OwnProduct productObj = apiGetProduct(result, barcode);
       DatabaseHelper.instance.addProduct(productObj);
-      return DatabaseHelper.instance.getOneProduct(barcode);
+      return DatabaseHelper.instance.getOneProductFromBarcode(barcode);
     }
   }
 
+  //Erstellen eines Produkt aus den Daten der API
   OwnProduct apiGetProduct(ProductResult result, String barcode) {
     if (result.status == 1) {
       OwnProduct productApi = OwnProduct(
           barcode: jsonDecode(jsonEncode(result.product))['code'],
           name: jsonDecode(jsonEncode(result.product))['product_name'],
-          marke: jsonDecode(jsonEncode(result.product))['brands'],
-          menge: jsonDecode(jsonEncode(result.product))['quantity'],
-          menge_ml: jsonDecode(jsonEncode(result.product))['product_quantity'],
-          kalorien: jsonEncode(result.product?.nutriments?.energyKcal100g),
-          fett: jsonEncode(result.product?.nutriments?.fat),
-          gesaettigt: jsonEncode(result.product?.nutriments?.saturatedFat),
-          kohlenhydrate: jsonEncode(result.product?.nutriments?.carbohydrates),
-          davonZucker: jsonEncode(result.product?.nutriments?.sugars),
-          eiweiss: jsonEncode(result.product?.nutriments?.proteins),
-          salz: jsonEncode(result.product?.nutriments?.salt));
+          brand: jsonDecode(jsonEncode(result.product))['brands'],
+          quantity: jsonDecode(jsonEncode(result.product))['quantity'],
+          quantity_ml: jsonDecode(jsonEncode(result.product))['product_quantity'],
+          calories: jsonEncode(result.product?.nutriments?.energyKcal100g),
+          fat: jsonEncode(result.product?.nutriments?.fat),
+          saturated: jsonEncode(result.product?.nutriments?.saturatedFat),
+          carbohydrates: jsonEncode(result.product?.nutriments?.carbohydrates),
+          sugar: jsonEncode(result.product?.nutriments?.sugars),
+          protein: jsonEncode(result.product?.nutriments?.proteins),
+          salt: jsonEncode(result.product?.nutriments?.salt));
       DatabaseHelper.instance.addProduct(productApi);
       return productApi;
     } else {
@@ -213,9 +235,10 @@ class _ProductPreviewState extends State<ProductPreview> {
     ProductResult result = await OpenFoodAPIClient.getProduct(configuration);
     return result;
   }
+
   scan() async {
     return await FlutterBarcodeScanner.scanBarcode(
-        "#000000", 'Abbrechen', true, ScanMode.BARCODE)
+            "#000000", 'Abbrechen', true, ScanMode.BARCODE)
         .then((value) => setState(() => _barcode = value));
   }
 }
