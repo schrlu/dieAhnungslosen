@@ -1,18 +1,19 @@
 import 'dart:convert';
-import 'dart:ffi';
+
 import 'package:dieahnungslosen/database_helper.dart';
 import 'package:dieahnungslosen/diary_entry.dart';
 import 'package:dieahnungslosen/main.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
+import 'package:intl/intl.dart';
 import 'package:openfoodfacts/openfoodfacts.dart';
 import 'package:openfoodfacts/utils/LanguageHelper.dart';
 import 'package:openfoodfacts/utils/ProductFields.dart';
 import 'package:openfoodfacts/utils/ProductQueryConfigurations.dart';
+
 import 'navbar.dart';
 import 'own_product.dart';
-import 'package:intl/intl.dart';
 
 class ProductPreview extends StatefulWidget {
   final String _barcode;
@@ -57,8 +58,8 @@ class _ProductPreviewState extends State<ProductPreview> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        buildTextFormFieldDisabled('Produktname:', name),
-                        buildTextFormFieldDisabled('Produktmarke:', brand),
+                        buildTextFormFieldDisabled('Produktmarke:', brand, 'diaryPreviewBrand'),
+                        buildTextFormFieldDisabled('Produktname:', name, 'diaryPreviewName'),
                         //Angabe des Eintragsdatums
                         TextButton(
                           onPressed: () async {
@@ -128,7 +129,7 @@ class _ProductPreviewState extends State<ProductPreview> {
                     return Container(
                       child: Column(
                         children: [
-                          Text('Scan fehlgeschlagen'),
+                          Text('Scan fehlgeschlagen', key: Key('failed'),),
                           TextButton(
                               onPressed: () async {
                                 await scan();
@@ -169,9 +170,10 @@ class _ProductPreviewState extends State<ProductPreview> {
     }
   }
 
-  TextFormField buildTextFormFieldDisabled(String decoration, [name]) {
+  TextFormField buildTextFormFieldDisabled(String decoration, String name, String keyValue) {
     return TextFormField(
       initialValue: '$decoration $name',
+      key: Key(keyValue),
       enabled: false,
       decoration: (InputDecoration(
           contentPadding: EdgeInsets.symmetric(horizontal: 20))),
@@ -193,7 +195,7 @@ class _ProductPreviewState extends State<ProductPreview> {
           hintText: '$decoration')),
     );
   }
-  
+
   //Wenn ein Produkt mit dem Barcode bereits vorhanden ist, wird dies benutzt, wenn nicht, dann wird über die API danach gesucht
   Future<List?> getProduct(String barcode) async {
     if (await DatabaseHelper.instance.checkProduct(barcode)) {
@@ -214,7 +216,8 @@ class _ProductPreviewState extends State<ProductPreview> {
           name: jsonDecode(jsonEncode(result.product))['product_name'],
           brand: jsonDecode(jsonEncode(result.product))['brands'],
           quantity: jsonDecode(jsonEncode(result.product))['quantity'],
-          quantity_ml: jsonDecode(jsonEncode(result.product))['product_quantity'],
+          quantity_ml:
+              jsonDecode(jsonEncode(result.product))['product_quantity'],
           calories: jsonEncode(result.product?.nutriments?.energyKcal100g),
           fat: jsonEncode(result.product?.nutriments?.fat),
           saturated: jsonEncode(result.product?.nutriments?.saturatedFat),

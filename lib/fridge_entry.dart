@@ -1,12 +1,11 @@
-import 'dart:ffi';
 
-import 'package:intl/intl.dart';
 
 class FridgeEntry {
   final int? fridge_id;
   int amount;
   String mhd;
   final int food_id;
+
   //Konstruktor
   FridgeEntry({
     this.fridge_id,
@@ -26,10 +25,10 @@ class FridgeEntry {
 
   factory FridgeEntry.fromMap(Map<String, dynamic> map) {
     FridgeEntry diaryEntry = FridgeEntry(
-    fridge_id:  map['fridge_id'] as int,
-    amount:  map['amount'] as int,
-    mhd:  map['mhd'] as String,
-    food_id:  map['food_id'] as int,
+      fridge_id: map['fridge_id'] as int,
+      amount: map['amount'] as int,
+      mhd: map['mhd'] as String,
+      food_id: map['food_id'] as int,
     );
     return diaryEntry;
   }

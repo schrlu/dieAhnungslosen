@@ -1,4 +1,4 @@
-import 'package:openfoodfacts/utils/PnnsGroups.dart';
+
 
 class OwnProduct {
   int? food_id;
@@ -14,6 +14,7 @@ class OwnProduct {
   String? sugar;
   String? protein;
   String? salt;
+
   //Konstruktor
   OwnProduct(
       {this.food_id,
@@ -21,7 +22,7 @@ class OwnProduct {
       this.name,
       this.brand,
       this.quantity,
-        this.quantity_ml,
+      this.quantity_ml,
       this.calories,
       this.fat,
       this.saturated,

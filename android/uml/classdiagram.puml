@@ -1,0 +1,231 @@
+@startuml
+set namespaceSeparator ::
+
+class "dieahnungslosen::database_helper.dart::DatabaseHelper" {
+  {static} +DatabaseHelper instance
+  {static} -Database? _database
+  +Future<Database> database
+  -Future<Database> _initDatabase()
+  -Future<dynamic> _onCreate()
+  +Future<List<dynamic>> getOneProductFromId()
+  +Future<List<dynamic>> getOneProductFromBarcode()
+  +Future<List<dynamic>> getOneDiaryEntry()
+  +Future<List<dynamic>> getOneFridgeEntry()
+  +Future<List<dynamic>> getSettings()
+  +Future<bool> checkProduct()
+  +Future<bool> checkDiaryEntry()
+  +Future<bool> checkFridgeEntry()
+  +Future<bool> checkFridgeEntryUpdate()
+  +Future<List<DiaryEntry>> getDiaryEntries()
+  +Future<List<FridgeEntry>> getFridgeEntries()
+  +Future<int> addProduct()
+  +Future<int> addDiaryEntry()
+  +Future<int> addFridgeEntry()
+  +Future<int> removeDiaryEntry()
+  +Future<int> removeFridgeEntry()
+  +dynamic updateDiaryEntry()
+  +dynamic updateDiaryEntryFromID()
+  +dynamic updateFridgeEntryFromID()
+  +dynamic updateSettings()
+  +dynamic updateFridgeEntry()
+  +Future<List<dynamic>?> getSummary()
+  +Future<List<dynamic>?> getSummaryCurrentDay()
+  +Future<String?> getNutriment()
+  +Future<String?> getName()
+  +Future<int?> getMaxDateDiff()
+}
+
+"dieahnungslosen::database_helper.dart::DatabaseHelper" o-- "dieahnungslosen::database_helper.dart::DatabaseHelper"
+"dieahnungslosen::database_helper.dart::DatabaseHelper" o-- "sqflite_common::sqlite_api.dart::Database"
+
+class "dieahnungslosen::diary_entry.dart::DiaryEntry" {
+  +int? diary_id
+  +double weight
+  +String date
+  +int food_id
+  +Map<String, dynamic> toMap()
+}
+
+class "dieahnungslosen::fridge.dart::WhatsInMyFridge" {
+  +State<WhatsInMyFridge> createState()
+}
+
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "dieahnungslosen::fridge.dart::WhatsInMyFridge"
+
+class "dieahnungslosen::fridge.dart::_WhatsInMyFridgeState" {
+  +TextEditingController anzahlController
+  -String _barcode
+  +DateFormat formatter
+  +Widget build()
+  +Flexible buildEntryText()
+  +dynamic scan()
+  +dynamic editProduct()
+  +dynamic watchProduct()
+}
+
+"dieahnungslosen::fridge.dart::_WhatsInMyFridgeState" o-- "flutter::src::widgets::editable_text.dart::TextEditingController"
+"dieahnungslosen::fridge.dart::_WhatsInMyFridgeState" o-- "intl::intl.dart::DateFormat"
+"flutter::src::widgets::framework.dart::State" <|-- "dieahnungslosen::fridge.dart::_WhatsInMyFridgeState"
+
+class "dieahnungslosen::fridge_entry.dart::FridgeEntry" {
+  +int? fridge_id
+  +int amount
+  +String mhd
+  +int food_id
+  +Map<String, dynamic> toMap()
+}
+
+class "dieahnungslosen::main.dart::FoodDiary" {
+  +State<FoodDiary> createState()
+}
+
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "dieahnungslosen::main.dart::FoodDiary"
+
+class "dieahnungslosen::main.dart::FoodDiaryState" {
+  -String _barcode
+  +DateFormat formatter
+  +TextEditingController quantityController
+  +Widget build()
+  +Flexible buildEntryText()
+  +dynamic scan()
+  +dynamic editProduct()
+  +dynamic watchProduct()
+}
+
+"dieahnungslosen::main.dart::FoodDiaryState" o-- "intl::intl.dart::DateFormat"
+"dieahnungslosen::main.dart::FoodDiaryState" o-- "flutter::src::widgets::editable_text.dart::TextEditingController"
+"flutter::src::widgets::framework.dart::State" <|-- "dieahnungslosen::main.dart::FoodDiaryState"
+
+class "dieahnungslosen::navbar.dart::NavBar" {
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "dieahnungslosen::navbar.dart::NavBar"
+
+class "dieahnungslosen::navbar.dart::Site" {
+  +IconData icon
+  +Widget page
+  +String title
+  +Widget build()
+}
+
+"dieahnungslosen::navbar.dart::Site" o-- "flutter::src::widgets::icon_data.dart::IconData"
+"dieahnungslosen::navbar.dart::Site" o-- "flutter::src::widgets::framework.dart::Widget"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "dieahnungslosen::navbar.dart::Site"
+
+class "dieahnungslosen::own_product.dart::OwnProduct" {
+  +int? food_id
+  +String? barcode
+  +String? name
+  +String? brand
+  +String? quantity
+  +double? quantity_ml
+  +String? calories
+  +String? fat
+  +String? saturated
+  +String? carbohydrates
+  +String? sugar
+  +String? protein
+  +String? salt
+  +Map<String, dynamic> toMap()
+}
+
+class "dieahnungslosen::product_preview.dart::ProductPreview" {
+  -String _barcode
+  +State<ProductPreview> createState()
+}
+
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "dieahnungslosen::product_preview.dart::ProductPreview"
+
+class "dieahnungslosen::product_preview.dart::_ProductPreviewState" {
+  -String _barcode
+  +OwnProduct? prod
+  -int _groupValue
+  +DateFormat ymd
+  +DateFormat dmy
+  +DateTime start
+  +DateTime end
+  +DateTime date
+  +Widget build()
+  +double getWeight()
+  +TextFormField buildTextFormFieldDisabled()
+  +bool checkGroupValue()
+  +TextFormField buildTextFormField()
+  +Future<List<dynamic>?> getProduct()
+  +OwnProduct apiGetProduct()
+  +Future<ProductResult> apiConfigurator()
+  +dynamic scan()
+}
+
+"dieahnungslosen::product_preview.dart::_ProductPreviewState" o-- "dieahnungslosen::own_product.dart::OwnProduct"
+"dieahnungslosen::product_preview.dart::_ProductPreviewState" o-- "intl::intl.dart::DateFormat"
+"flutter::src::widgets::framework.dart::State" <|-- "dieahnungslosen::product_preview.dart::_ProductPreviewState"
+
+class "dieahnungslosen::product_preview_frige.dart::ProductPreviewFridge" {
+  -String _barcode
+  +State<ProductPreviewFridge> createState()
+}
+
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "dieahnungslosen::product_preview_frige.dart::ProductPreviewFridge"
+
+class "dieahnungslosen::product_preview_frige.dart::_ProductPreviewFridgeState" {
+  -String _barcode
+  +OwnProduct? prod
+  +DateFormat ymd
+  +DateFormat dmy
+  +DateTime start
+  +DateTime end
+  +DateTime date
+  -int _groupValue
+  +Widget build()
+  +double getWeight()
+  +TextFormField buildTextFormFieldDisabled()
+  +bool checkGroupValue()
+  +TextFormField buildTextFormField()
+  +Future<List<dynamic>?> getProduct()
+  +OwnProduct apiGetProduct()
+  +Future<ProductResult> apiConfigurator()
+  +dynamic scan()
+}
+
+"dieahnungslosen::product_preview_frige.dart::_ProductPreviewFridgeState" o-- "dieahnungslosen::own_product.dart::OwnProduct"
+"dieahnungslosen::product_preview_frige.dart::_ProductPreviewFridgeState" o-- "intl::intl.dart::DateFormat"
+"flutter::src::widgets::framework.dart::State" <|-- "dieahnungslosen::product_preview_frige.dart::_ProductPreviewFridgeState"
+
+class "dieahnungslosen::settings.dart::Settings" {
+  +State<Settings> createState()
+}
+
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "dieahnungslosen::settings.dart::Settings"
+
+class "dieahnungslosen::settings.dart::_SettingsState" {
+  +Widget build()
+  +TextButton buildChoice()
+  +String? getGender()
+}
+
+"flutter::src::widgets::framework.dart::State" <|-- "dieahnungslosen::settings.dart::_SettingsState"
+
+class "dieahnungslosen::user_summary.dart::UserSummary" {
+  +State<UserSummary> createState()
+}
+
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "dieahnungslosen::user_summary.dart::UserSummary"
+
+class "dieahnungslosen::user_summary.dart::_UserSummaryState" {
+  +int gender
+  +int cal1Day
+  +double fat1Day
+  +double carb1Day
+  +double sug1Day
+  +double prot1Day
+  +double salt1Day
+  +Map<dynamic, dynamic> summary
+  +Widget build()
+  +void setGoals()
+}
+
+"flutter::src::widgets::framework.dart::State" <|-- "dieahnungslosen::user_summary.dart::_UserSummaryState"
+
+
+@enduml

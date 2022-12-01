@@ -1,12 +1,12 @@
-import 'dart:convert';
 import 'dart:io';
+
 import 'package:dieahnungslosen/diary_entry.dart';
 import 'package:dieahnungslosen/fridge_entry.dart';
+import 'package:dieahnungslosen/own_product.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:dieahnungslosen/own_product.dart';
 
 class DatabaseHelper {
   //Singleton Pattern
@@ -172,6 +172,7 @@ class DatabaseHelper {
         [id]);
     return result.isNotEmpty;
   }
+
   //Check ob ein Eintrag mit der gegebenen ID existiert
   Future<bool> checkFridgeEntry(int id, String mhd) async {
     Database db = await DatabaseHelper.instance.database;
@@ -181,6 +182,7 @@ class DatabaseHelper {
         [id]);
     return result.isNotEmpty;
   }
+
   //Check ob ein Eintrag (außer der aufrufende Eintrag) mit der gegebenen ID existiert
   Future<bool> checkFridgeEntryUpdate(int id, String mhd, int idNot) async {
     Database db = await DatabaseHelper.instance.database;
@@ -251,7 +253,6 @@ class DatabaseHelper {
     Database db = await instance.database;
     return await db.delete('fridge', where: 'fridge_id = ?', whereArgs: [id]);
   }
-
 
   updateDiaryEntry(DiaryEntry entry, double weight) async {
     Database db = await instance.database;
@@ -358,6 +359,7 @@ class DatabaseHelper {
     String name = result.first['name'];
     return name;
   }
+
   //Maximaler Datumsunterschied zwischen Einträgen der Ernährungstagebuch-Einträge
   Future<int?> getMaxDateDiff() async {
     Database db = await DatabaseHelper.instance.database;

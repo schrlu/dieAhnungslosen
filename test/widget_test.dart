@@ -1,30 +1,98 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
 
+import 'package:dieahnungslosen/database_helper.dart';
+import 'package:dieahnungslosen/fridge.dart';
+import 'package:dieahnungslosen/product_preview.dart';
+import 'package:dieahnungslosen/settings.dart';
+import 'package:dieahnungslosen/user_summary.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:dieahnungslosen/main.dart';
-
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const FoodDiary());
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  testWidgets('Fridge test', (WidgetTester tester) async {
+    //find all widgets needed
+    final button = find.byKey(Key('refresh'));
+    //execute test
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+    await tester.pumpWidget(MaterialApp(home: WhatsInMyFridge()));
     await tester.pump();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+
+    //check
+    expect(button, findsOneWidget);
   });
+  testWidgets('Inserting Food-Diary entry', (WidgetTester tester) async {
+    //find all widgets needed
+    final brand = find.byKey(Key('diaryPreviewBrand'));
+    final name = find.byKey(Key('diaryPreviewName'));
+
+    //execute test
+    await tester.pumpWidget(MaterialApp(home: ProductPreview('42142188')));
+    await tester.pump();
+    expect(find.byKey(Key('failed')), findsOneWidget);
+    // expect(brand, findsOneWidget);
+    // expect(name, findsOneWidget);
+    //check
+    expect(find.byKey(Key('failed')), findsOneWidget);
+  });
+  testWidgets('Summary test', (WidgetTester tester) async {
+    //find all widgets needed
+    final DatabaseHelper db;
+    final textField = find.byKey(Key('error'));
+
+    //execute test
+    await tester.pumpWidget(MaterialApp(home: UserSummary()));
+    await tester.pump();
+
+    //check
+    expect(textField, findsOneWidget);
+  });
+  testWidgets('Settings test', (WidgetTester tester) async {
+    //find all widgets needed
+    final DatabaseHelper db;
+    final textField = find.textContaining('No settings found');
+
+    //execute test
+    await tester.pumpWidget(MaterialApp(home: Settings()));
+    await tester.pump();
+
+    //check
+    expect(textField, findsOneWidget);
+  });
+//   testWidgets('my drawer test', (WidgetTester tester) async {
+//   final scaffoldKey = GlobalKey<ScaffoldState>();
+//   // final navBarFridge = find.byKey(ValueKey('navBarFridge'));
+//   final navBarFridge = find.byIcon(Icons.door_front_door_rounded);
+//   await tester.pumpWidget(
+//     MaterialApp(
+//       home: Scaffold(
+//         key: scaffoldKey,
+//         drawer: NavBar(),
+//       ),
+//     ),
+//   );
+//
+//   scaffoldKey.currentState?.openDrawer();
+//   await tester.pump();
+//   await tester.tap(navBarFridge);
+//   await tester.pump();
+//
+//   expect(find.byWidget(WhatsInMyFridge()), findsOneWidget);
+// });
+  // testWidgets('Counter increments smoke test', (WidgetTester tester) async {
+  //   //find all widgets needed
+  //   final navBarFridge = find.byIcon(Icons.door_front_door_rounded);
+  //   //execute test
+  //
+  //   await tester.pumpWidget(MaterialApp(home: FoodDiary()));
+  //   await tester.pump();
+  //   final ScaffoldState state = tester.firstState(find.byType(Scaffold));
+  //   state.openDrawer();
+  //   await tester.pump();
+  //   await tester.tap(navBarFridge);
+  //   await tester.pump();
+  //
+  //   //check
+  //   expect(find.byIcon(Icons.refresh), findsOneWidget);
+  // });
 }

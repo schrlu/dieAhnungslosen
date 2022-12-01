@@ -1,5 +1,4 @@
 import 'package:dieahnungslosen/database_helper.dart';
-import 'package:dieahnungslosen/main.dart';
 import 'package:dieahnungslosen/navbar.dart';
 import 'package:flutter/material.dart';
 

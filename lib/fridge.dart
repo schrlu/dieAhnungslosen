@@ -1,13 +1,11 @@
-import 'dart:convert';
-
+import 'package:dieahnungslosen/database_helper.dart';
 import 'package:dieahnungslosen/navbar.dart';
 import 'package:dieahnungslosen/product_preview_frige.dart';
-import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:dieahnungslosen/database_helper.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:intl/intl.dart';
 
 import 'fridge_entry.dart';
 
@@ -142,7 +140,7 @@ class _WhatsInMyFridgeState extends State<WhatsInMyFridge> {
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
                                           children: [
-                                            buildEntryText('Datum:'),
+                                            buildEntryText('Min. Haltbarkeitsdatum:'),
                                             buildEntryText(
                                                 '${formatter.format(DateTime.parse(entry.mhd))}'),
                                           ],
@@ -161,6 +159,8 @@ class _WhatsInMyFridgeState extends State<WhatsInMyFridge> {
             Column(
               children: [
                 FloatingActionButton(
+                    key: Key('refresh'),
+                    heroTag: 'reload',
                     onPressed: () async {
                       setState(() {});
                     },
@@ -169,6 +169,7 @@ class _WhatsInMyFridgeState extends State<WhatsInMyFridge> {
                 const SizedBox(height: 10),
                 //Button zum Scannen des Barcodes eines Produktes
                 FloatingActionButton(
+                    heroTag: 'scan',
                     onPressed: () async {
                       await scan();
                       Navigator.push(
@@ -247,9 +248,20 @@ class _WhatsInMyFridgeState extends State<WhatsInMyFridge> {
                           )),
                       TextButton(
                           onPressed: () => {
-                                DatabaseHelper.instance.updateFridgeEntry(entry,
-                                    mhd!, int.parse(anzahlController.text)),
-                                Navigator.pop(context),
+                                if (anzahlController.text == '')
+                                  {
+                                    DatabaseHelper.instance.updateFridgeEntry(
+                                        entry, mhd, entry.amount),
+                                    Navigator.pop(context)
+                                  }
+                                else
+                                  {
+                                    DatabaseHelper.instance.updateFridgeEntry(
+                                        entry,
+                                        mhd,
+                                        int.parse(anzahlController.text)),
+                                    Navigator.pop(context),
+                                  }
                               },
                           child: Text('Submit')),
                     ],
@@ -280,8 +292,7 @@ class _WhatsInMyFridgeState extends State<WhatsInMyFridge> {
                           'davon gesättigte Fettsäuren: ${snapshot.data!.first['saturated']} g'),
                       Text(
                           'Kohlenhydrate: ${snapshot.data!.first['carbohydrates']} g'),
-                      Text(
-                          'davon Zucker: ${snapshot.data!.first['sugar']} g'),
+                      Text('davon Zucker: ${snapshot.data!.first['sugar']} g'),
                       Text('Eiweiß: ${snapshot.data!.first['protein']} g'),
                       Text('Salz: ${snapshot.data!.first['salt']} g'),
                     ],

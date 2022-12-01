@@ -1,24 +1,23 @@
 import 'dart:convert';
-import 'dart:ffi';
+
 import 'package:dieahnungslosen/database_helper.dart';
-import 'package:dieahnungslosen/diary_entry.dart';
 import 'package:dieahnungslosen/fridge.dart';
-import 'package:dieahnungslosen/main.dart';
-import 'package:dieahnungslosen/product_preview.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
+import 'package:intl/intl.dart';
 import 'package:openfoodfacts/openfoodfacts.dart';
 import 'package:openfoodfacts/utils/LanguageHelper.dart';
 import 'package:openfoodfacts/utils/ProductFields.dart';
 import 'package:openfoodfacts/utils/ProductQueryConfigurations.dart';
+
 import 'fridge_entry.dart';
 import 'navbar.dart';
 import 'own_product.dart';
-import 'package:intl/intl.dart';
 
 class ProductPreviewFridge extends StatefulWidget {
   final String _barcode;
+
   //Konstruktor
   ProductPreviewFridge(this._barcode);
 
@@ -139,7 +138,6 @@ class _ProductPreviewFridgeState extends State<ProductPreviewFridge> {
     );
   }
 
-
   double getWeight(int weight, String controller) {
     if (_groupValue == 1) {
       return double.parse(weight.toString());
@@ -192,7 +190,8 @@ class _ProductPreviewFridgeState extends State<ProductPreviewFridge> {
           name: jsonDecode(jsonEncode(result.product))['product_name'],
           brand: jsonDecode(jsonEncode(result.product))['brands'],
           quantity: jsonDecode(jsonEncode(result.product))['quantity'],
-          quantity_ml: jsonDecode(jsonEncode(result.product))['product_quantity'],
+          quantity_ml:
+              jsonDecode(jsonEncode(result.product))['product_quantity'],
           calories: jsonEncode(result.product?.nutriments?.energyKcal100g),
           fat: jsonEncode(result.product?.nutriments?.fat),
           saturated: jsonEncode(result.product?.nutriments?.saturatedFat),

@@ -1,9 +1,10 @@
 import 'package:dieahnungslosen/database_helper.dart';
 import 'package:dieahnungslosen/diary_entry.dart';
+import 'package:dieahnungslosen/navbar.dart';
 import 'package:dieahnungslosen/product_preview.dart';
+import 'package:dieahnungslosen/user_summary.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:dieahnungslosen/navbar.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
@@ -27,7 +28,7 @@ class FoodDiary extends StatefulWidget {
 
 class FoodDiaryState extends State<FoodDiary> {
   String _barcode = "";
-  var formatter = DateFormat('dd.MM.yyyy');
+  DateFormat formatter = DateFormat('dd.MM.yyyy');
   TextEditingController quantityController = TextEditingController();
 
   @override
@@ -172,6 +173,7 @@ class FoodDiaryState extends State<FoodDiary> {
                     heroTag: 'Scan-Button',
                     onPressed: () async {
                       await scan();
+                      print('barcode $_barcode');
                       Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -258,8 +260,7 @@ class FoodDiaryState extends State<FoodDiary> {
                           'davon gesättigte Fettsäuren: ${snapshot.data!.first['saturated']} g'),
                       Text(
                           'Kohlenhydrate: ${snapshot.data!.first['carbohydrates']} g'),
-                      Text(
-                          'davon Zucker: ${snapshot.data!.first['sugar']} g'),
+                      Text('davon Zucker: ${snapshot.data!.first['sugar']} g'),
                       Text('Eiweiß: ${snapshot.data!.first['protein']} g'),
                       Text('Salz: ${snapshot.data!.first['salt']} g'),
                     ],
